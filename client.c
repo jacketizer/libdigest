@@ -120,7 +120,7 @@ _dgst_ha1(char *username, char *realm, char *password)
 
 // MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2)
 static inline char *
-_dgst_response(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
+_dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
 {
   char raw[512];
   sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
@@ -149,6 +149,8 @@ _dgst_fill(digest_s *dig, char *digest_string)
       dig->qop = _dgst_get_val(val);
     } else if (0 == strncmp("opaque=", val, 4)) {
       dig->opaque = _dgst_get_val(val);
+    } else if (0 == strncmp("algorithm=", val, 10)) {
+      dig->algorithm = _dgst_get_val(val);
     }
   }
 
@@ -162,7 +164,7 @@ _dgst_fill(digest_s *dig, char *digest_string)
   return i;
 }
 
-char *
+void *
 digest_get_attr(digest_t digest, digest_attr_t attr)
 {
 	digest_s *dig = (digest_s *) digest;
@@ -172,19 +174,31 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 			return dig->username;
 		case D_ATTR_PASSWORD:
 			return dig->password;
+		case D_ATTR_REALM:
+			return dig->realm;
 		case D_ATTR_NONCE:
 			return dig->nonce;
+		case D_ATTR_CNONCE:
+			return &(dig->cnonce);
+		case D_ATTR_OPAQUE:
+			return dig->opaque;
 		case D_ATTR_URI:
 			return dig->uri;
 		case D_ATTR_METHOD:
 			return dig->uri;
+		case D_ATTR_ALGORITHM:
+			return dig->algorithm;
+		case D_ATTR_QOP:
+			return dig->qop;
+    case D_ATTR_NONCE_COUNT:
+      return &(dig->nc);
 		default:
 			return NULL;
 	}
 }
 
 int
-digest_set_attr(digest_t digest, digest_attr_t attr, const char *value)
+digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 {
 	digest_s *dig = (digest_s *) digest;
 
@@ -195,8 +209,17 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const char *value)
 		case D_ATTR_PASSWORD:
 			dig->password = strdup(value);
 			break;
+		case D_ATTR_REALM:
+			dig->realm = strdup(value);
+			break;
 		case D_ATTR_NONCE:
 			dig->nonce = strdup(value);
+			break;
+		case D_ATTR_CNONCE:
+			dig->cnonce = *((unsigned int *) value);
+			break;
+		case D_ATTR_OPAQUE:
+			dig->opaque = strdup(value);
 			break;
 		case D_ATTR_URI:
 			dig->uri = strdup(value);
@@ -204,6 +227,15 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const char *value)
 		case D_ATTR_METHOD:
 			dig->method = strdup(value);
 			break;
+		case D_ATTR_ALGORITHM:
+			dig->algorithm = strdup(value);
+			break;
+		case D_ATTR_QOP:
+			dig->qop = strdup(value);
+			break;
+    case D_ATTR_NONCE_COUNT:
+      dig->nc = *((unsigned int *) value);
+      break;
 		default:
 			return -1;
 	}
@@ -245,10 +277,10 @@ digest_get_hval(digest_t digest)
 
   ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
   ha2 = _dgst_ha2(dig->method, dig->uri);
-  res = _dgst_response(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
+  res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
 
-  char *authval = malloc(4096);
-  sprintf(authval, "Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", algorithm=%s, response=\"%s\", qop=%s, nc=%08x, cnonce=\"%08x\", uri=\"%s\"", dig->username, dig->realm, dig->nonce, dig->algorithm, res, dig->qop, dig->nc, dig->cnonce, dig->uri);
+  char *header_val = malloc(4096);
+  sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", algorithm=%s, response=\"%s\", qop=%s, nc=%08x, cnonce=%08x, uri=\"%s\"", dig->username, dig->realm, dig->algorithm, res, dig->qop, dig->nc, dig->cnonce, dig->uri);
 
   free(ha1);
   free(ha2);
@@ -257,5 +289,5 @@ digest_get_hval(digest_t digest)
   /* Increase the count */
   dig->nc++;
 
-  return authval;
+  return header_val;
 }
