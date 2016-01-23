@@ -1,7 +1,12 @@
 libdigest
 =========
 
-Libdigest is a small C library for parsing and generating HTTP Digest Access Authentication ([rfc2617](https://www.ietf.org/rfc/rfc2617.txt)) header strings, both server side and client side.
+Libdigest is a small C library for parsing and generating HTTP Digest Access
+Authentication ([rfc2617](https://www.ietf.org/rfc/rfc2617.txt)) header
+strings, both server side and client side.
+
+Only supports qop="auth" and algorithm="MD5" for now. If they are not supplied,
+"auth" and "MD5" are assumed.
 
 Build it
 --------
@@ -24,10 +29,10 @@ Create a new digest object with the value of the WWW-Authenticate header:
 
 Then supply the username, password and URI like below:
 
-      digest_set_attr(d, D_ATTR_USERNAME, "jack");
-      digest_set_attr(d, D_ATTR_PASSWORD, "Pass0rd");
-      digest_set_attr(d, D_ATTR_URI, "/api/user");
-      digest_set_attr(d, D_ATTR_METHOD, "POST");
+    digest_set_attr(d, D_ATTR_USERNAME, "jack");
+    digest_set_attr(d, D_ATTR_PASSWORD, "Pass0rd");
+    digest_set_attr(d, D_ATTR_URI, "/api/user");
+    digest_set_attr(d, D_ATTR_METHOD, "POST");
 
 To get the string to use in the Authorization header, call ´digest_get_hval()´, as below:
 

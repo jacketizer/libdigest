@@ -204,34 +204,34 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 
 	switch (attr) {
 	case D_ATTR_USERNAME:
-		dig->username = strdup(value);
+		dig->username = strdup((const char *) value);
 		break;
 	case D_ATTR_PASSWORD:
-		dig->password = strdup(value);
+		dig->password = strdup((const char *) value);
 		break;
 	case D_ATTR_REALM:
-		dig->realm = strdup(value);
+		dig->realm = strdup((const char *) value);
 		break;
 	case D_ATTR_NONCE:
-		dig->nonce = strdup(value);
+		dig->nonce = strdup((const char *) value);
 		break;
 	case D_ATTR_CNONCE:
 		dig->cnonce = *((unsigned int *) value);
 		break;
 	case D_ATTR_OPAQUE:
-		dig->opaque = strdup(value);
+		dig->opaque = strdup((const char *) value);
 		break;
 	case D_ATTR_URI:
-		dig->uri = strdup(value);
+		dig->uri = strdup((const char *) value);
 		break;
 	case D_ATTR_METHOD:
-		dig->method = strdup(value);
+		dig->method = strdup((const char *) value);
 		break;
 	case D_ATTR_ALGORITHM:
-		dig->algorithm = strdup(value);
+		dig->algorithm = strdup((const char *) value);
 		break;
 	case D_ATTR_QOP:
-		dig->qop = strdup(value);
+		dig->qop = strdup((const char *) value);
 		break;
 	case D_ATTR_NONCE_COUNT:
 		dig->nc = *((unsigned int *) value);
@@ -259,7 +259,7 @@ digest_create(char *digest_string)
 	/* Initialize */
 	dig->nc = 1;
 	dig->cnonce = time(NULL);
-	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5); // Only support MD5
+	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5);
 
 	return (digest_t) dig;
 }
@@ -280,7 +280,7 @@ digest_get_hval(digest_t digest)
 	res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
 
 	char *header_val = malloc(4096);
-	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", algorithm=%s, response=\"%s\", qop=%s, nc=%08x, cnonce=%08x, uri=\"%s\"", dig->username, dig->realm, dig->algorithm, res, dig->qop, dig->nc, dig->cnonce, dig->uri);
+	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=%s, qop=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x, algorithm=\"%s\", response=\"%s\"", dig->username, dig->realm, dig->uri, dig->qop, dig->nonce, dig->cnonce, dig->nc, dig->algorithm, res);
 
 	free(ha1);
 	free(ha2);
