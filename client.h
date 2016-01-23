@@ -13,17 +13,17 @@ typedef digest_s* digest_t;
  * Authorization headers.
  */
 typedef enum {
-  D_ATTR_USERNAME,
-  D_ATTR_PASSWORD,
-  D_ATTR_REALM,
-  D_ATTR_NONCE,
-  D_ATTR_CNONCE,
-  D_ATTR_OPAQUE,
-  D_ATTR_URI,
-  D_ATTR_METHOD,
-  D_ATTR_ALGORITHM,
-  D_ATTR_QOP,
-  D_ATTR_NONCE_COUNT
+	D_ATTR_USERNAME,
+	D_ATTR_PASSWORD,
+	D_ATTR_REALM,
+	D_ATTR_NONCE,
+	D_ATTR_CNONCE,
+	D_ATTR_OPAQUE,
+	D_ATTR_URI,
+	D_ATTR_METHOD,
+	D_ATTR_ALGORITHM,
+	D_ATTR_QOP,
+	D_ATTR_NONCE_COUNT
 } digest_attr_t;
 
 /* Supported hashing algorithms */

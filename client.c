@@ -113,55 +113,55 @@ _dgst_ha2(char *method, char *uri)
 static inline char *
 _dgst_ha1(char *username, char *realm, char *password)
 {
-  char raw[512];
-  sprintf(raw, "%s:%s:%s", username, realm, password);
-  return _get_md5(raw);
+	char raw[512];
+	sprintf(raw, "%s:%s:%s", username, realm, password);
+	return _get_md5(raw);
 }
 
 // MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2)
 static inline char *
 _dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
 {
-  char raw[512];
-  sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
-  return _get_md5(raw);
+	char raw[512];
+	sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
+	return _get_md5(raw);
 }
 
 int
 _dgst_fill(digest_s *dig, char *digest_string)
 {
-  char **values = malloc(127);
-  int n = _split_sentence(digest_string, values);
+	char **values = malloc(127);
+	int n = _split_sentence(digest_string, values);
 
-  int i = 0;
-  char *val;
-  while (i < n) {
-    val = values[i++];
-    if (NULL == val) {
-      continue;
-    }
+	int i = 0;
+	char *val;
+	while (i < n) {
+		val = values[i++];
+		if (NULL == val) {
+			continue;
+		}
 
-    if (0 == strncmp("nonce=", val, 6)) {
-      dig->nonce = _dgst_get_val(val);
-    } else if (0 == strncmp("realm=", val, 6)) {
-      dig->realm = _dgst_get_val(val);
-    } else if (0 == strncmp("qop=", val, 4)) {
-      dig->qop = _dgst_get_val(val);
-    } else if (0 == strncmp("opaque=", val, 4)) {
-      dig->opaque = _dgst_get_val(val);
-    } else if (0 == strncmp("algorithm=", val, 10)) {
-      dig->algorithm = _dgst_get_val(val);
-    }
-  }
+		if (0 == strncmp("nonce=", val, 6)) {
+			dig->nonce = _dgst_get_val(val);
+		} else if (0 == strncmp("realm=", val, 6)) {
+			dig->realm = _dgst_get_val(val);
+		} else if (0 == strncmp("qop=", val, 4)) {
+			dig->qop = _dgst_get_val(val);
+		} else if (0 == strncmp("opaque=", val, 4)) {
+			dig->opaque = _dgst_get_val(val);
+		} else if (0 == strncmp("algorithm=", val, 10)) {
+			dig->algorithm = _dgst_get_val(val);
+		}
+	}
 
-  free(values);
+	free(values);
 
-  /* Only support qop=auth for now */
-  if (0 != strcmp(DIGEST_QOP_AUTH, dig->qop)) {
-    return -1;
-  }
+	/* Only support qop=auth for now */
+	if (0 != strcmp(DIGEST_QOP_AUTH, dig->qop)) {
+		return -1;
+	}
 
-  return i;
+	return i;
 }
 
 void *
@@ -170,30 +170,30 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 	digest_s *dig = (digest_s *) digest;
 
 	switch (attr) {
-		case D_ATTR_USERNAME:
-			return dig->username;
-		case D_ATTR_PASSWORD:
-			return dig->password;
-		case D_ATTR_REALM:
-			return dig->realm;
-		case D_ATTR_NONCE:
-			return dig->nonce;
-		case D_ATTR_CNONCE:
-			return &(dig->cnonce);
-		case D_ATTR_OPAQUE:
-			return dig->opaque;
-		case D_ATTR_URI:
-			return dig->uri;
-		case D_ATTR_METHOD:
-			return dig->uri;
-		case D_ATTR_ALGORITHM:
-			return dig->algorithm;
-		case D_ATTR_QOP:
-			return dig->qop;
-    case D_ATTR_NONCE_COUNT:
-      return &(dig->nc);
-		default:
-			return NULL;
+	case D_ATTR_USERNAME:
+		return dig->username;
+	case D_ATTR_PASSWORD:
+		return dig->password;
+	case D_ATTR_REALM:
+		return dig->realm;
+	case D_ATTR_NONCE:
+		return dig->nonce;
+	case D_ATTR_CNONCE:
+		return &(dig->cnonce);
+	case D_ATTR_OPAQUE:
+		return dig->opaque;
+	case D_ATTR_URI:
+		return dig->uri;
+	case D_ATTR_METHOD:
+		return dig->uri;
+	case D_ATTR_ALGORITHM:
+		return dig->algorithm;
+	case D_ATTR_QOP:
+		return dig->qop;
+	case D_ATTR_NONCE_COUNT:
+		return &(dig->nc);
+	default:
+		return NULL;
 	}
 }
 
@@ -203,41 +203,41 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 	digest_s *dig = (digest_s *) digest;
 
 	switch (attr) {
-		case D_ATTR_USERNAME:
-			dig->username = strdup(value);
-			break;
-		case D_ATTR_PASSWORD:
-			dig->password = strdup(value);
-			break;
-		case D_ATTR_REALM:
-			dig->realm = strdup(value);
-			break;
-		case D_ATTR_NONCE:
-			dig->nonce = strdup(value);
-			break;
-		case D_ATTR_CNONCE:
-			dig->cnonce = *((unsigned int *) value);
-			break;
-		case D_ATTR_OPAQUE:
-			dig->opaque = strdup(value);
-			break;
-		case D_ATTR_URI:
-			dig->uri = strdup(value);
-			break;
-		case D_ATTR_METHOD:
-			dig->method = strdup(value);
-			break;
-		case D_ATTR_ALGORITHM:
-			dig->algorithm = strdup(value);
-			break;
-		case D_ATTR_QOP:
-			dig->qop = strdup(value);
-			break;
-    case D_ATTR_NONCE_COUNT:
-      dig->nc = *((unsigned int *) value);
-      break;
-		default:
-			return -1;
+	case D_ATTR_USERNAME:
+		dig->username = strdup(value);
+		break;
+	case D_ATTR_PASSWORD:
+		dig->password = strdup(value);
+		break;
+	case D_ATTR_REALM:
+		dig->realm = strdup(value);
+		break;
+	case D_ATTR_NONCE:
+		dig->nonce = strdup(value);
+		break;
+	case D_ATTR_CNONCE:
+		dig->cnonce = *((unsigned int *) value);
+		break;
+	case D_ATTR_OPAQUE:
+		dig->opaque = strdup(value);
+		break;
+	case D_ATTR_URI:
+		dig->uri = strdup(value);
+		break;
+	case D_ATTR_METHOD:
+		dig->method = strdup(value);
+		break;
+	case D_ATTR_ALGORITHM:
+		dig->algorithm = strdup(value);
+		break;
+	case D_ATTR_QOP:
+		dig->qop = strdup(value);
+		break;
+	case D_ATTR_NONCE_COUNT:
+		dig->nc = *((unsigned int *) value);
+		break;
+	default:
+		return -1;
 	}
 
 	return 0;
@@ -246,22 +246,22 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 digest_t
 digest_create(char *digest_string)
 {
-  digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
-  if (NULL == dig) {
-    return (digest_t) NULL;
-  }
+	digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
+	if (NULL == dig) {
+		return (digest_t) NULL;
+	}
 
-  if (-1 == _dgst_fill(dig, digest_string)) {
-    free(dig);
-    return (digest_t) NULL;
-  }
+	if (-1 == _dgst_fill(dig, digest_string)) {
+		free(dig);
+		return (digest_t) NULL;
+	}
 
-  /* Initialize */
-  dig->nc = 1;
-  dig->cnonce = time(NULL);
-  dig->algorithm = strdup(DIGEST_ALGORITHM_MD5); // Only support MD5
+	/* Initialize */
+	dig->nc = 1;
+	dig->cnonce = time(NULL);
+	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5); // Only support MD5
 
-  return (digest_t) dig;
+	return (digest_t) dig;
 }
 
 // HA1 (username:REALM:password):
@@ -271,23 +271,23 @@ digest_create(char *digest_string)
 char *
 digest_get_hval(digest_t digest)
 {
-  digest_s *dig = (digest_s *) digest;
+	digest_s *dig = (digest_s *) digest;
 
-  char *ha1, *ha2, *res;
+	char *ha1, *ha2, *res;
 
-  ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
-  ha2 = _dgst_ha2(dig->method, dig->uri);
-  res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
+	ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
+	ha2 = _dgst_ha2(dig->method, dig->uri);
+	res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
 
-  char *header_val = malloc(4096);
-  sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", algorithm=%s, response=\"%s\", qop=%s, nc=%08x, cnonce=%08x, uri=\"%s\"", dig->username, dig->realm, dig->algorithm, res, dig->qop, dig->nc, dig->cnonce, dig->uri);
+	char *header_val = malloc(4096);
+	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", algorithm=%s, response=\"%s\", qop=%s, nc=%08x, cnonce=%08x, uri=\"%s\"", dig->username, dig->realm, dig->algorithm, res, dig->qop, dig->nc, dig->cnonce, dig->uri);
 
-  free(ha1);
-  free(ha2);
-  free(res);
+	free(ha1);
+	free(ha2);
+	free(res);
 
-  /* Increase the count */
-  dig->nc++;
+	/* Increase the count */
+	dig->nc++;
 
-  return header_val;
+	return header_val;
 }
