@@ -13,7 +13,7 @@ Please note that this library is under development and should not be used yet.
 ### To do, client
 
   * Parse qop according to rfc (could be a comma seperated list).
-  * When rendering `Authorization` string, check for NULL values in struct.
+  * When rendering `Authorization` string, check for `NULL` values in struct.
   * When rendering `Authorization` string, take the `qop` value in
     consideration.
   * Better get/set functions for the attributes.
@@ -25,7 +25,9 @@ Please note that this library is under development and should not be used yet.
 Build it
 --------
 
-    $ make && make install
+```sh
+$ make && make install
+```
 
 How to use it
 -------------
@@ -60,7 +62,7 @@ To get the string to use in the Authorization header, call ´digest_get_hval()´
 char *v = digest_get_hval(d);
 ```
 
-All the code (compile with ´-ldigest´):
+All the code (compile with `-ldigest`):
 
 ```C
 #include <digest.h>
