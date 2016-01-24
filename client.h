@@ -27,10 +27,11 @@ typedef enum {
 } digest_attr_t;
 
 /* Supported hashing algorithms */
-#define DIGEST_ALGORITHM_MD5 "MD5"
+#define DIGEST_ALGORITHM_MD5	"MD5"
 
-/* Supported Quality of Protection (qop) values */
-#define DIGEST_QOP_AUTH "auth"
+/* Quality of Protection (qop) values */
+#define DIGEST_QOP_AUTH 	1
+#define DIGEST_QOP_AUTH_INT	2 /* Not supported yet */
 
 /*
  * Create a new digest object

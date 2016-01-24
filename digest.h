@@ -11,7 +11,7 @@ typedef struct {
 	char *uri;
 	char *method;
 	char *algorithm;
-	char *qop;
+	char qop;
 	unsigned int nc;
 } digest_s;
 

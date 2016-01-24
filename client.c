@@ -56,6 +56,13 @@ _dgst_get_val(char *value)
 	return cursor;
 }
 
+static char *
+_crop_sentence(char *sentence)
+{
+ 	/* Skip Digest word, and duplicate string */
+	return strdup(sentence + 7);
+}
+
 /**
  * Splits a sentence by comma.
  *
@@ -69,7 +76,6 @@ static inline int
 _split_sentence(char *sentence, char **values)
 {
 	int i = 0;
-	sentence = strdup(sentence + 7); // skip Digest word
 	char *cursor = sentence;
 	int length = strlen(sentence);
 
@@ -128,10 +134,10 @@ _dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce
 }
 
 int
-_dgst_fill(digest_s *dig, char *digest_string)
+_dgst_parse(digest_s *dig, char *digest_string)
 {
-	char **values = malloc(127);
-	int n = _split_sentence(digest_string, values);
+	char *values[127];
+	int n = _split_sentence(_crop_sentence(digest_string), values);
 
 	int i = 0;
 	char *val;
@@ -146,19 +152,23 @@ _dgst_fill(digest_s *dig, char *digest_string)
 		} else if (0 == strncmp("realm=", val, 6)) {
 			dig->realm = _dgst_get_val(val);
 		} else if (0 == strncmp("qop=", val, 4)) {
-			dig->qop = _dgst_get_val(val);
+			char *qop_options = _dgst_get_val(val);
+			char *qop_values[4];
+			int n_qops = _split_sentence(qop_options, qop_values);
+			while (n_qops-- > 0) {
+				if (0 == strncmp(qop_values[n_qops], "auth", 4)) {
+					dig->qop |= DIGEST_QOP_AUTH;
+					continue;
+				}
+				if (0 == strncmp(qop_values[n_qops], "auth-int", 8)) {
+					dig->qop |= DIGEST_QOP_AUTH_INT;
+				}
+			}
 		} else if (0 == strncmp("opaque=", val, 4)) {
 			dig->opaque = _dgst_get_val(val);
 		} else if (0 == strncmp("algorithm=", val, 10)) {
 			dig->algorithm = _dgst_get_val(val);
 		}
-	}
-
-	free(values);
-
-	/* Only support qop=auth for now */
-	if (0 != strcmp(DIGEST_QOP_AUTH, dig->qop)) {
-		return -1;
 	}
 
 	return i;
@@ -189,7 +199,7 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 	case D_ATTR_ALGORITHM:
 		return dig->algorithm;
 	case D_ATTR_QOP:
-		return dig->qop;
+		return &(dig->qop);
 	case D_ATTR_NONCE_COUNT:
 		return &(dig->nc);
 	default:
@@ -231,7 +241,7 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 		dig->algorithm = strdup((const char *) value);
 		break;
 	case D_ATTR_QOP:
-		dig->qop = strdup((const char *) value);
+		dig->qop = *((char *) value);
 		break;
 	case D_ATTR_NONCE_COUNT:
 		dig->nc = *((unsigned int *) value);
@@ -251,7 +261,9 @@ digest_create(char *digest_string)
 		return (digest_t) NULL;
 	}
 
-	if (-1 == _dgst_fill(dig, digest_string)) {
+	dig->qop = '\0';
+
+	if (-1 == _dgst_parse(dig, digest_string)) {
 		free(dig);
 		return (digest_t) NULL;
 	}
@@ -272,15 +284,27 @@ char *
 digest_get_hval(digest_t digest)
 {
 	digest_s *dig = (digest_s *) digest;
-
+	char *qop_value = NULL;
 	char *ha1, *ha2, *res;
+
+	if ((int) DIGEST_QOP_AUTH == (int) ((char) DIGEST_QOP_AUTH & dig->qop)) {
+		qop_value = "auth";
+	} else if ((int) DIGEST_QOP_AUTH_INT == (int) ((char) DIGEST_QOP_AUTH_INT & dig->qop)) {
+		/* Unsupported for now */
+		return (char *) NULL;
+	}
 
 	ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
 	ha2 = _dgst_ha2(dig->method, dig->uri);
-	res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, dig->qop, ha2);
+	res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, qop_value, ha2);
 
 	char *header_val = malloc(4096);
-	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=%s, qop=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x, algorithm=\"%s\", response=\"%s\"", dig->username, dig->realm, dig->uri, dig->qop, dig->nonce, dig->cnonce, dig->nc, dig->algorithm, res);
+	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x, algorithm=\"%s\", response=\"%s\"", dig->username, dig->realm, dig->uri, dig->nonce, dig->cnonce, dig->nc, dig->algorithm, res);
+
+	if (NULL != qop_value) {
+		strcat(header_val, ", auth=");
+		strcat(header_val, qop_value);
+	}
 
 	free(ha1);
 	free(ha2);

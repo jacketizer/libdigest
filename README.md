@@ -13,6 +13,7 @@ Please note that this library is under development and should not be used yet.
 ### To do, client
 
   * Parse qop according to rfc (could be a comma seperated list).
+    Store in qop-options instead of qop.
   * When rendering `Authorization` string, check for `NULL` values in struct.
   * When rendering `Authorization` string, take the `qop` value in
     consideration.
