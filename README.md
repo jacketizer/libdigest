@@ -8,6 +8,20 @@ strings, both server side and client side.
 Only supports qop="auth" and algorithm="MD5" for now. If they are not supplied,
 "auth" and "MD5" are assumed.
 
+Please note that this library is under development and should not be used yet.
+
+### To do client
+
+  * Parse qop according to rfc (could be a comma seperated list).
+  * When rendering `Authorization` string, check for NULL values in struct.
+  * When rendering `Authorization` string, take the `qop` value in
+    consideration.
+  * Better get/set functions for the attributes,
+
+### To do server
+
+  * Start implementing it.
+
 Build it
 --------
 
