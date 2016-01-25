@@ -14,7 +14,7 @@ Please note that this library is under development and should not be used yet.
 
   * When rendering `Authorization` string, check for `NULL` values in struct.
   * Where and when to have quotes.
-  * When to increase nc.
+  * When to increase `nc`.
   * Better get/set functions for the attributes.
   * Function documentation.
   * Unit tests.
@@ -73,7 +73,7 @@ All the code (compile with `-ldigest`):
 int main(int argc, char **argv)
 {
 	char *digest_str = "Digest realm=\"api\", qop=auth, nonce=dcd98b7102dd2f0e8b11d0f600bfb0c093";
-	printf("Generating header value for Authorization:\n%s\n", digest_str);
+	printf("WWW-Authentication: %s\n", digest_str);
 
 	digest_t d = digest_create(digest_str);
 	digest_set_attr(d, D_ATTR_USERNAME, "jack");
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 	digest_set_attr(d, D_ATTR_METHOD, "POST");
 	char *v = digest_get_hval(d);
 
-	printf("Generated digest value:\n%s\n", v);
+	printf("Authorization: %s\n", v);
 
 	return 0;
 }
