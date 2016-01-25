@@ -133,14 +133,23 @@ _dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce
 	return _get_md5(raw);
 }
 
+// MD5(HA1:nonce:HA2)
+static inline char *
+_dgst_response(char *ha1, char *nonce, char *ha2)
+{
+	char raw[512];
+	sprintf(raw, "%s:%s:%s", ha1, nonce, ha2);
+	return _get_md5(raw);
+}
+
 int
 _dgst_parse(digest_s *dig, char *digest_string)
 {
+	int i = 0;
+	char *val;
 	char *values[127];
 	int n = _split_sentence(_crop_sentence(digest_string), values);
 
-	int i = 0;
-	char *val;
 	while (i < n) {
 		val = values[i++];
 		if (NULL == val) {
@@ -164,7 +173,7 @@ _dgst_parse(digest_s *dig, char *digest_string)
 					dig->qop |= DIGEST_QOP_AUTH_INT;
 				}
 			}
-		} else if (0 == strncmp("opaque=", val, 4)) {
+		} else if (0 == strncmp("opaque=", val, 7)) {
 			dig->opaque = _dgst_get_val(val);
 		} else if (0 == strncmp("algorithm=", val, 10)) {
 			dig->algorithm = _dgst_get_val(val);
@@ -276,34 +285,73 @@ digest_create(char *digest_string)
 	return (digest_t) dig;
 }
 
-// HA1 (username:REALM:password):
-// HA2 (METHOD:/url/to/services)
-//
-// Response: MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2)
+/* HA1 (username:REALM:password):
+   HA2 (METHOD:/url/to/services)
+
+   Response: MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2) */
 char *
 digest_get_hval(digest_t digest)
 {
 	digest_s *dig = (digest_s *) digest;
-	char *qop_value = NULL;
 	char *ha1, *ha2, *res;
+	char *header_val;
+	char *qop_value;
 
+	/* Build Quality of Protection - qop */
 	if ((int) DIGEST_QOP_AUTH == (int) ((char) DIGEST_QOP_AUTH & dig->qop)) {
 		qop_value = "auth";
 	} else if ((int) DIGEST_QOP_AUTH_INT == (int) ((char) DIGEST_QOP_AUTH_INT & dig->qop)) {
-		/* Unsupported for now */
+		/* auth-int, which is not supported */
 		return (char *) NULL;
 	}
 
+	/* Generate the hashes */
 	ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
 	ha2 = _dgst_ha2(dig->method, dig->uri);
-	res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, qop_value, ha2);
 
-	char *header_val = malloc(4096);
-	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x, algorithm=\"%s\", response=\"%s\"", dig->username, dig->realm, dig->uri, dig->nonce, dig->cnonce, dig->nc, dig->algorithm, res);
+	if (DIGEST_QOP_NOT_SET != dig->qop) {
+		res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, qop_value, ha2);
+	} else {
+		res = _dgst_response(ha1, dig->nonce, ha2);
+	}
 
-	if (NULL != qop_value) {
-		strcat(header_val, ", auth=");
-		strcat(header_val, qop_value);
+	header_val = malloc(4096);
+	if (NULL == header_val) {
+		/* Could not allocate memory for result string */
+		return (char *) NULL;
+	}
+
+	/* Generate the minimum digest header string */
+	sprintf(header_val, "Digest \
+	    username=\"%s\", \
+	    realm=\"%s\", \
+	    uri=\"%s\", \
+	    algorithm=\"%s\", \
+	    response=\"%s\"",\
+	    dig->username,\
+	    dig->realm,\
+	    dig->uri,\
+	    dig->algorithm,\
+	    res);
+
+	/* opaque */
+	if (NULL != dig->opaque) {
+		sprintf(header_val + strlen(header_val), ", \
+	    	    opaque=\"%s\"",\
+	    	    dig->opaque);
+	}
+
+	/* If qop is supplied, add nonce, cnonce, nc and qop */
+	if (DIGEST_QOP_NOT_SET != dig->qop) {
+		sprintf(header_val + strlen(header_val), ", \
+		    qop=%s, \
+		    nonce=\"%s\", \
+		    cnonce=\"%08x\", \
+		    nc=%08x",\
+		    qop_value,\
+		    dig->nonce,\
+		    dig->cnonce,\
+		    dig->nc);
 	}
 
 	free(ha1);

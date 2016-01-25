@@ -12,12 +12,13 @@ Please note that this library is under development and should not be used yet.
 
 ### To do, client
 
-  * Parse qop according to rfc (could be a comma seperated list).
-    Store in qop-options instead of qop.
   * When rendering `Authorization` string, check for `NULL` values in struct.
-  * When rendering `Authorization` string, take the `qop` value in
-    consideration.
+  * Where and when to have quotes.
+  * When to increase nc.
   * Better get/set functions for the attributes.
+  * Function documentation.
+  * Unit tests.
+  * Function tests.
 
 ### To do, server
 

@@ -30,6 +30,7 @@ typedef enum {
 #define DIGEST_ALGORITHM_MD5	"MD5"
 
 /* Quality of Protection (qop) values */
+#define DIGEST_QOP_NOT_SET 	0
 #define DIGEST_QOP_AUTH 	1
 #define DIGEST_QOP_AUTH_INT	2 /* Not supported yet */
 
@@ -66,7 +67,7 @@ extern void * digest_get_attr(digest_t digest, digest_attr_t attr);
 extern int digest_set_attr(digest_t digest, digest_attr_t attr, const void *value);
 
 /*
- * Get the WWW-Authenticate header value
+ * Generate the Authorization header value
  *
  * @param digest_t *digest The digest object to generate the header value from.
  *
