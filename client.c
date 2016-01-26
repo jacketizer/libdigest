@@ -2,65 +2,84 @@
 #include "client.h"
 
 /**
- * MD5 hash a string.
+ * Generate an MD5 hash from a string.
  *
  * string needs to be null terminated.
  *
- * Returns a pointer to the MD5 string, needs to be manually free'd.
+ * Returns a pointer to the MD5 string on success, otherwise NULL. Needs to be
+ * manually free'd.
  */
 static char *
 _get_md5(const char *string)
 {
-	// MD5 Test code
+	int i = 0;
+	char *md5_string;
 	unsigned char digest[16];
+
+	md5_string = malloc(52);
+	if (NULL == md5_string) {
+		return (char *) NULL;
+	}
+
 	MD5_CTX context;
 	MD5_Init(&context);
 	MD5_Update(&context, string, strlen(string));
 	MD5_Final(digest, &context);
 
-	int i = 0;
-	char *md5string = malloc(52);
 	for (i = 0; i < 16; ++i) {
-		sprintf(&md5string[i * 2], "%02x", (unsigned int) digest[i]);
+		sprintf(&md5_string[i * 2], "%02x", (unsigned int) digest[i]);
 	}
 
-	return md5string;
+	return md5_string;
 }
 
 /**
- * Get value from digest key/value string.
+ * Extracts the value part from a attribute-value pair.
  *
- * value is the string to parse the value from, ex: "key=value".
+ * parameter is the string to parse the value from, ex: "key=value".
  *
- * Returns a pointer to the start of the value, null terminated.
+ * Returns a pointer to the start of the value on success, otherwise NULL.
  */
 static char *
-_dgst_get_val(char *value)
+_dgst_get_val(char *parameter)
 {
-	char *cursor = value;
+	char *cursor;
 
-	/* find start of value */
-	while (*cursor != '=') {
-		cursor++;
+	/* Find start of value */
+	cursor = strchr(parameter, '=');
+	if (NULL == cursor) {
+		return (char *) NULL;
 	}
-	cursor++;
 
+	cursor++;
 	if (*cursor != '"') {
 		return cursor;
 	}
 	cursor++;
 
-	int len = strlen(cursor);
-	cursor[len - 1] = '\0';
+	char *q = strchr(cursor, '"');
+	if (NULL == q) {
+		return (char *) NULL;
+	}
+	*q = '\0';
 
 	return cursor;
 }
 
+/**
+ * Removes the authentication scheme identification token from the
+ * WWW-Authenticate header field value.
+ *
+ * header_value is the WWW-Authenticate header field value.
+ *
+ * Returns a pointer to a new string containing only
+ * the authentication parameters.
+ */
 static char *
-_crop_sentence(char *sentence)
+_crop_sentence(char *header_value)
 {
  	/* Skip Digest word, and duplicate string */
-	return strdup(sentence + 7);
+	return strdup(header_value + 7);
 }
 
 /**
@@ -172,7 +191,7 @@ _tokenize_sentence(char *sentence, char **values, int max_values)
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 static inline char *
-_dgst_ha2(char *method, char *uri)
+_dgst_generate_a2(char *method, char *uri)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s", method, uri);
@@ -181,7 +200,7 @@ _dgst_ha2(char *method, char *uri)
 
 // MD5(username:REALM:password):
 static inline char *
-_dgst_ha1(char *username, char *realm, char *password)
+_dgst_generate_a1(char *username, char *realm, char *password)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", username, realm, password);
@@ -190,7 +209,7 @@ _dgst_ha1(char *username, char *realm, char *password)
 
 // MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2)
 static inline char *
-_dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
+_dgst_generate_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
@@ -199,7 +218,7 @@ _dgst_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce
 
 // MD5(HA1:nonce:HA2)
 static inline char *
-_dgst_response(char *ha1, char *nonce, char *ha2)
+_dgst_generate_response(char *ha1, char *nonce, char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", ha1, nonce, ha2);
@@ -361,7 +380,7 @@ char *
 digest_get_hval(digest_t digest)
 {
 	digest_s *dig = (digest_s *) digest;
-	char *ha1, *ha2, *res;
+	char *hash_a1, *hash_a2, *hash_res;
 	char *header_val;
 	char *qop_value, *algorithm_value;
 
@@ -380,13 +399,13 @@ digest_get_hval(digest_t digest)
 	}
 
 	/* Generate the hashes */
-	ha1 = _dgst_ha1(dig->username, dig->realm, dig->password);
-	ha2 = _dgst_ha2(dig->method, dig->uri);
+	hash_a1 = _dgst_generate_a1(dig->username, dig->realm, dig->password);
+	hash_a2 = _dgst_generate_a2(dig->method, dig->uri);
 
 	if (DIGEST_QOP_NOT_SET != dig->qop) {
-		res = _dgst_response_auth(ha1, dig->nonce, dig->nc, dig->cnonce, qop_value, ha2);
+		hash_res = _dgst_generate_response_auth(hash_a1, dig->nonce, dig->nc, dig->cnonce, qop_value, hash_a2);
 	} else {
-		res = _dgst_response(ha1, dig->nonce, ha2);
+		hash_res = _dgst_generate_response(hash_a1, dig->nonce, hash_a2);
 	}
 
 	header_val = malloc(4096);
@@ -404,7 +423,7 @@ digest_get_hval(digest_t digest)
 	    dig->username,\
 	    dig->realm,\
 	    dig->uri,\
-	    res);
+	    hash_res);
 
 	/* opaque */
 	if (NULL != dig->opaque) {
@@ -433,9 +452,9 @@ digest_get_hval(digest_t digest)
 		    dig->nc);
 	}
 
-	free(ha1);
-	free(ha2);
-	free(res);
+	free(hash_a1);
+	free(hash_a2);
+	free(hash_res);
 
 	/* Increase the count */
 	dig->nc++;
