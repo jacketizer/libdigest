@@ -240,7 +240,10 @@ _dgst_parse(digest_s *dig, char *digest_string)
 		} else if (0 == strncmp("opaque=", val, 7)) {
 			dig->opaque = _dgst_get_val(val);
 		} else if (0 == strncmp("algorithm=", val, 10)) {
-			dig->algorithm = _dgst_get_val(val);
+			char *algorithm = _dgst_get_val(val);
+			if (0 == strncmp(algorithm, "MD5", 3)) {
+				dig->algorithm = DIGEST_ALGORITHM_MD5;
+			}
 		}
 	}
 
@@ -270,7 +273,7 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 	case D_ATTR_METHOD:
 		return dig->uri;
 	case D_ATTR_ALGORITHM:
-		return dig->algorithm;
+		return &(dig->algorithm);
 	case D_ATTR_QOP:
 		return &(dig->qop);
 	case D_ATTR_NONCE_COUNT:
@@ -311,7 +314,7 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 		dig->method = strdup((const char *) value);
 		break;
 	case D_ATTR_ALGORITHM:
-		dig->algorithm = strdup((const char *) value);
+		dig->algorithm = *((char *) value);
 		break;
 	case D_ATTR_QOP:
 		dig->qop = *((char *) value);
@@ -334,10 +337,12 @@ digest_create(char *digest_string)
 		return (digest_t) NULL;
 	}
 
+
 	/* Initialize */
+	memset(dig, 0, sizeof (digest_s));
 	dig->nc = 1;
 	dig->cnonce = time(NULL);
-	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5);
+	dig->algorithm = DIGEST_ALGORITHM_MD5;
 	dig->qop = '\0';
 
 	if (-1 == _dgst_parse(dig, digest_string)) {
@@ -358,7 +363,7 @@ digest_get_hval(digest_t digest)
 	digest_s *dig = (digest_s *) digest;
 	char *ha1, *ha2, *res;
 	char *header_val;
-	char *qop_value;
+	char *qop_value, *algorithm_value;
 
 	/* Build Quality of Protection - qop */
 	if ((int) DIGEST_QOP_AUTH == (int) ((char) DIGEST_QOP_AUTH & dig->qop)) {
@@ -366,6 +371,12 @@ digest_get_hval(digest_t digest)
 	} else if ((int) DIGEST_QOP_AUTH_INT == (int) ((char) DIGEST_QOP_AUTH_INT & dig->qop)) {
 		/* auth-int, which is not supported */
 		return (char *) NULL;
+	}
+
+	/* Set algorithm */
+	algorithm_value = NULL;
+	if (DIGEST_ALGORITHM_MD5 == dig->algorithm) {
+		algorithm_value = "MD5";
 	}
 
 	/* Generate the hashes */
@@ -389,12 +400,10 @@ digest_get_hval(digest_t digest)
 	    username=\"%s\", \
 	    realm=\"%s\", \
 	    uri=\"%s\", \
-	    algorithm=\"%s\", \
 	    response=\"%s\"",\
 	    dig->username,\
 	    dig->realm,\
 	    dig->uri,\
-	    dig->algorithm,\
 	    res);
 
 	/* opaque */
@@ -402,6 +411,13 @@ digest_get_hval(digest_t digest)
 		sprintf(header_val + strlen(header_val), ", \
 	    	    opaque=\"%s\"",\
 	    	    dig->opaque);
+	}
+
+	/* algorithm */
+	if (DIGEST_ALGORITHM_NOT_SET != dig->algorithm) {
+		sprintf(header_val + strlen(header_val), ", \
+	    	    algorithm=\"%s\"",\
+	    	    algorithm_value);
 	}
 
 	/* If qop is supplied, add nonce, cnonce, nc and qop */

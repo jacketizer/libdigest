@@ -27,7 +27,8 @@ typedef enum {
 } digest_attr_t;
 
 /* Supported hashing algorithms */
-#define DIGEST_ALGORITHM_MD5	"MD5"
+#define DIGEST_ALGORITHM_NOT_SET	0
+#define DIGEST_ALGORITHM_MD5		1
 
 /* Quality of Protection (qop) values */
 #define DIGEST_QOP_NOT_SET 	0

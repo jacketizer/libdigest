@@ -10,7 +10,7 @@ typedef struct {
 	char *opaque;
 	char *uri;
 	char *method;
-	char *algorithm;
+	char algorithm;
 	char qop;
 	unsigned int nc;
 } digest_s;
