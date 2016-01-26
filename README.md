@@ -13,7 +13,6 @@ Please note that this library is under development and should not be used yet.
 ### To do, client
 
   * When rendering `Authorization` string, check for `NULL` values in struct.
-  * Where and when to have quotes.
   * When to increase `nc`.
   * Better get/set functions for the attributes.
   * Function documentation.

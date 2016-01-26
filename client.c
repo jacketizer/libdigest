@@ -21,7 +21,7 @@ _get_md5(const char *string)
 	int i = 0;
 	char *md5string = malloc(52);
 	for (i = 0; i < 16; ++i) {
-		sprintf(&md5string[i*2], "%02x", (unsigned int) digest[i]);
+		sprintf(&md5string[i * 2], "%02x", (unsigned int) digest[i]);
 	}
 
 	return md5string;
@@ -64,33 +64,97 @@ _crop_sentence(char *sentence)
 }
 
 /**
- * Splits a sentence by comma.
+ * Split a sentence by comma.
  *
  * sentence is the string to split, null terminated.
  * values is a char pointer array that will be filled with pointers to the
  * splitted values in the sentence string.
+ * max_values is the length of the **values array. The function will not parse
+ * more than max_values entries.
  *
  * Returns the number of values found in sentence.
  */
 static inline int
-_split_sentence(char *sentence, char **values)
+_split_sentence(char *sentence, char **values, int max_values)
+	{
+	int i = 0;
+	char *cursor = sentence;
+	int length = strlen(sentence);
+
+	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
+		/* Rewind to after spaces */
+		while (*cursor == ' ' || *cursor == ',') {
+			cursor++;
+		}
+
+		values[i++] = cursor;
+
+		/* Find comma */
+		cursor = (char *) memchr(cursor, ',', length - (cursor - sentence));
+		if (NULL == cursor) {
+			/* End of string */
+			break;
+		}
+
+		*cursor = '\0';
+		cursor++;
+	}
+
+	return i;
+}
+
+/**
+ * Tokenize a sentence by comma.
+ *
+ * sentence is the string to split, null terminated.
+ * values is a char pointer array that will be filled with pointers to the
+ * splitted values in the sentence string.
+ * max_values is the length of the **values array. The function will not parse
+ * more than max_values entries.
+ *
+ * Returns the number of values found in sentence.
+ */
+static inline int
+_tokenize_sentence(char *sentence, char **values, int max_values)
 {
 	int i = 0;
 	char *cursor = sentence;
 	int length = strlen(sentence);
 
-	while (*cursor != '\0' && cursor - sentence < length) {
-		/* rewind to after spaces */
+	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
+		/* Rewind to after spaces */
 		while (*cursor == ' ' || *cursor == ',') {
 			cursor++;
 		}
+
 		values[i++] = cursor;
 
-		/* find comma */
-		cursor = (char *) memchr(cursor, ',', length - (cursor - sentence));
+		/* Find equal sign (=) */
+		cursor = (char *) memchr(cursor, '=', length - (cursor - sentence));
 		if (NULL == cursor) {
-			/* end of string */
+			/* End of string */
 			break;
+		}
+
+		/* Check if a quotation mark follows the = */
+		cursor++;
+		if ('\"' == *cursor) {
+			/* Find next quotation mark */
+			cursor++;
+			cursor = (char *) memchr(cursor, '\"', length - (cursor - sentence));
+			if (NULL == cursor) {
+				/* End of string */
+				break;
+			}
+			/* Comma should be after */
+			cursor++;
+		} else {
+			/* Find comma */
+			cursor = (char *) memchr(cursor, ',', length - (cursor - sentence));
+			if (NULL == cursor) {
+				/* End of string */
+				break;
+			}
 		}
 
 		*cursor = '\0';
@@ -147,8 +211,8 @@ _dgst_parse(digest_s *dig, char *digest_string)
 {
 	int i = 0;
 	char *val;
-	char *values[127];
-	int n = _split_sentence(_crop_sentence(digest_string), values);
+	char *values[12];
+	int n = _tokenize_sentence(_crop_sentence(digest_string), values, 12);
 
 	while (i < n) {
 		val = values[i++];
@@ -162,8 +226,8 @@ _dgst_parse(digest_s *dig, char *digest_string)
 			dig->realm = _dgst_get_val(val);
 		} else if (0 == strncmp("qop=", val, 4)) {
 			char *qop_options = _dgst_get_val(val);
-			char *qop_values[4];
-			int n_qops = _split_sentence(qop_options, qop_values);
+			char *qop_values[2];
+			int n_qops = _split_sentence(qop_options, qop_values, 2);
 			while (n_qops-- > 0) {
 				if (0 == strncmp(qop_values[n_qops], "auth", 4)) {
 					dig->qop |= DIGEST_QOP_AUTH;
@@ -270,17 +334,16 @@ digest_create(char *digest_string)
 		return (digest_t) NULL;
 	}
 
+	/* Initialize */
+	dig->nc = 1;
+	dig->cnonce = time(NULL);
+	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5);
 	dig->qop = '\0';
 
 	if (-1 == _dgst_parse(dig, digest_string)) {
 		free(dig);
 		return (digest_t) NULL;
 	}
-
-	/* Initialize */
-	dig->nc = 1;
-	dig->cnonce = time(NULL);
-	dig->algorithm = strdup(DIGEST_ALGORITHM_MD5);
 
 	return (digest_t) dig;
 }
