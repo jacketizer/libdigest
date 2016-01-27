@@ -2,7 +2,7 @@
 #include "client.h"
 
 /**
- * Generate an MD5 hash from a string.
+ * Generates an MD5 hash from a string.
  *
  * string needs to be null terminated.
  *
@@ -83,7 +83,7 @@ _crop_sentence(char *header_value)
 }
 
 /**
- * Split a sentence by comma.
+ * Splits a string by comma.
  *
  * sentence is the string to split, null terminated.
  * values is a char pointer array that will be filled with pointers to the
@@ -123,7 +123,7 @@ _split_sentence(char *sentence, char **values, int max_values)
 }
 
 /**
- * Tokenize a sentence by comma.
+ * Tokenizes a string containing comma-seperated attribute-key parameters.
  *
  * sentence is the string to split, null terminated.
  * values is a char pointer array that will be filled with pointers to the
@@ -184,7 +184,7 @@ _tokenize_sentence(char *sentence, char **values, int max_values)
 }
 
 /**
- * Hash method and URI (ex: GET:/api/users).
+ * Hashes method and URI (ex: GET:/api/users).
  *
  * Both method and uri should be null terminated strings.
  *
@@ -198,7 +198,13 @@ _dgst_generate_a2(char *method, char *uri)
 	return _get_md5(raw);
 }
 
-// MD5(username:REALM:password):
+/**
+ * Hashes username, realm and password (ex: jack:GET:password).
+ *
+ * All arguments should be null terminated strings.
+ *
+ * Returns the hash as a null terminated string. Should be free'd manually.
+ */
 static inline char *
 _dgst_generate_a1(char *username, char *realm, char *password)
 {
@@ -207,7 +213,16 @@ _dgst_generate_a1(char *username, char *realm, char *password)
 	return _get_md5(raw);
 }
 
-// MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2)
+/**
+ * Generates the response parameter according to rfc.
+ *
+ * Hashes a1, nonce, nc, cnonce, qop and a2. This should be used when the
+ * qop parameter is supplied.
+ *
+ * All arguments should be null terminated strings.
+ *
+ * Returns the hash as a null terminated string. Should be free'd manually.
+ */
 static inline char *
 _dgst_generate_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
 {
@@ -216,7 +231,16 @@ _dgst_generate_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned i
 	return _get_md5(raw);
 }
 
-// MD5(HA1:nonce:HA2)
+/**
+ * Generates the response parameter according to rfc.
+ *
+ * Hashes a1, nonce and a2. This is the version used when the qop parameter is
+ * not supplied.
+ *
+ * All arguments should be null terminated strings.
+ *
+ * Returns the hash as a null terminated string. Should be free'd manually.
+ */
 static inline char *
 _dgst_generate_response(char *ha1, char *nonce, char *ha2)
 {
@@ -225,6 +249,15 @@ _dgst_generate_response(char *ha1, char *nonce, char *ha2)
 	return _get_md5(raw);
 }
 
+/**
+ * Parses a WWW-Authenticate header value to a struct.
+ *
+ * dig is a pointer to the digest struct to fill the parsed values with.
+ * digest_string should be the value from the WWW-Authentication header,
+ * null terminated.
+ *
+ * Returns the hash as a null terminated string. Should be free'd manually.
+ */
 int
 _dgst_parse(digest_s *dig, char *digest_string)
 {
@@ -267,6 +300,42 @@ _dgst_parse(digest_s *dig, char *digest_string)
 	}
 
 	return i;
+}
+
+int
+digest_is_digest(char *header_value)
+{
+  if (NULL == header_value) {
+    return -1;
+  }
+  if (0 != strncmp(header_value, "Digest", 6)) {
+    return -1;
+  }
+
+  return 0;
+}
+
+digest_t
+digest_create(char *digest_string)
+{
+	digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
+	if (NULL == dig) {
+		return (digest_t) NULL;
+	}
+
+	/* Initialize */
+	memset(dig, 0, sizeof (digest_s));
+	dig->nc = 1;
+	dig->cnonce = time(NULL);
+	dig->algorithm = DIGEST_ALGORITHM_MD5;
+	dig->qop = '\0';
+
+	if (-1 == _dgst_parse(dig, digest_string)) {
+		free(dig);
+		return (digest_t) NULL;
+	}
+
+	return (digest_t) dig;
 }
 
 void *
@@ -348,47 +417,6 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 	return 0;
 }
 
-digest_t
-digest_create(char *digest_string)
-{
-	digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
-	if (NULL == dig) {
-		return (digest_t) NULL;
-	}
-
-
-	/* Initialize */
-	memset(dig, 0, sizeof (digest_s));
-	dig->nc = 1;
-	dig->cnonce = time(NULL);
-	dig->algorithm = DIGEST_ALGORITHM_MD5;
-	dig->qop = '\0';
-
-	if (-1 == _dgst_parse(dig, digest_string)) {
-		free(dig);
-		return (digest_t) NULL;
-	}
-
-	return (digest_t) dig;
-}
-
-int
-digest_is_digest(char *header_value)
-{
-  if (NULL == header_value) {
-    return -1;
-  }
-  if (0 != strncmp(header_value, "Digest", 6)) {
-    return -1;
-  }
-
-  return 0;
-}
-
-/* HA1 (username:REALM:password):
-   HA2 (METHOD:/url/to/services)
-
-   Response: MD5(HA1:nonce:nonceCount:clientNonce:qop:HA2) */
 char *
 digest_get_hval(digest_t digest)
 {
