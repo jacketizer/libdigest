@@ -372,6 +372,19 @@ digest_create(char *digest_string)
 	return (digest_t) dig;
 }
 
+int
+digest_is_digest(char *header_value)
+{
+  if (NULL == header_value) {
+    return -1;
+  }
+  if (0 != strncmp(header_value, "Digest", 6)) {
+    return -1;
+  }
+
+  return 0;
+}
+
 /* HA1 (username:REALM:password):
    HA2 (METHOD:/url/to/services)
 

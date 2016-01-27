@@ -68,6 +68,15 @@ extern void * digest_get_attr(digest_t digest, digest_attr_t attr);
 extern int digest_set_attr(digest_t digest, digest_attr_t attr, const void *value);
 
 /*
+ * Checks if WWW-Authenticate string is digest authentication scheme
+ *
+ * @param const char *header_value The value of the WWW-Authentication header.
+ *
+ * @returns int 0 if digest scheme, otherwise -1.
+ **/
+extern int digest_is_digest(char *header_value);
+
+/*
  * Generate the Authorization header value
  *
  * @param digest_t *digest The digest object to generate the header value from.
