@@ -35,19 +35,7 @@ How to use it
 
 ### Client side
 
-First, include the header files:| Attribute          | Data Type | Description                           | Default      | Must be set by client |
-|--------------------|-----------|---------------------------------------|--------------|-----------------------|
-| D_ATTR_USERNAME    | `char *`  | Username to authenticate with         | `NULL`       | Yes                   |
-| D_ATTR_PASSWORD    | `char *`  | Password to authenticate with         | `NULL`       | Yes                   |
-| D_ATTR_REALM       | `char *`  | The realm                             | Parsed value |                       |
-| D_ATTR_NONCE       | `char *`  |                                       | Parsed value |                       |
-| D_ATTR_CNONCE      | `int`     |                                       | Random value |                       |
-| D_ATTR_OPAQUE      | `char *`  |                                       | Parsed value |                       |
-| D_ATTR_URI         | `char *`  |                                       | `NULL`       | Yes                   |
-| D_ATTR_METHOD      | `int`     | HTTP method used in challange request |              | Yes                   |
-| D_ATTR_ALGORITHM   | `int`     |                                       | MD5          |                       |
-| D_ATTR_QOP         | `int`     |                                       | auth         |                       |
-| D_ATTR_NONCE_COUNT | `int`     |                                       | 1            |                       |
+First, include the header files:
 
 ```C
 #include <digest.h>
