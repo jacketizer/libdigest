@@ -57,7 +57,7 @@ digest_set_attr(d, D_ATTR_URI, "/api/user");
 digest_set_attr(d, D_ATTR_METHOD, "POST");
 ```
 
-To get the string to use in the Authorization header, call ´digest_get_hval()´, as below:
+To get the string to use in the Authorization header, call `digest_get_hval()`, as below:
 
 ```C
 char *v = digest_get_hval(d);
@@ -90,16 +90,16 @@ int main(int argc, char **argv)
 Attributes
 ----------
 
-| Attribute          | Data Type | Header Attr         | Default                | Mandatory |
-|--------------------|-----------|---------------------|------------------------|-----------|
-| D_ATTR_USERNAME    | `char *`  | `username`          | `NULL`                 | Yes       |
-| D_ATTR_PASSWORD    | `char *`  | `response` (hashed) | `NULL`                 | Yes       |
-| D_ATTR_REALM       | `char *`  | `realm`             | Parsed value           |           |
-| D_ATTR_NONCE       | `char *`  | `nonce`             | Parsed value           |           |
-| D_ATTR_CNONCE      | `int`     | `cnonce`            | Random value           |           |
-| D_ATTR_OPAQUE      | `char *`  | `opaque`            | Parsed value           |           |
-| D_ATTR_URI         | `char *`  | `uri`               | `NULL`                 | Yes       |
-| D_ATTR_METHOD      | `int`     | `response` (hashed) |                        | Yes       |
-| D_ATTR_ALGORITHM   | `int`     | `algorithm`         | `DIGEST_ALGORITHM_MD5` |           |
-| D_ATTR_QOP         | `int`     | `qop`               | `auth`                 |           |
-| D_ATTR_NONCE_COUNT | `int`     | `nc`                | 1                      |           |
+| Attribute            | Data Type | Header Attr         | Default                | Mandatory |
+|:---------------------|:----------|:--------------------|:-----------------------|:----------|
+| `D_ATTR_USERNAME`    | `char *`  | `username`          | `NULL`                 | Yes       |
+| `D_ATTR_PASSWORD`    | `char *`  | `response` (hashed) | `NULL`                 | Yes       |
+| `D_ATTR_REALM`       | `char *`  | `realm`             | Parsed value           |           |
+| `D_ATTR_NONCE`       | `char *`  | `nonce`             | Parsed value           |           |
+| `D_ATTR_CNONCE`      | `int`     | `cnonce`            | Random value           |           |
+| `D_ATTR_OPAQUE`      | `char *`  | `opaque`            | Parsed value           |           |
+| `D_ATTR_URI`         | `char *`  | `uri`               | `NULL`                 | Yes       |
+| `D_ATTR_METHOD`      | `int`     | `response` (hashed) |                        | Yes       |
+| `D_ATTR_ALGORITHM`   | `int`     | `algorithm`         | `DIGEST_ALGORITHM_MD5` |           |
+| `D_ATTR_QOP`         | `int`     | `qop`               | `auth`                 |           |
+| `D_ATTR_NONCE_COUNT` | `int`     | `nc`                | 1                      |           |
