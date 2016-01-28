@@ -19,7 +19,7 @@ typedef enum {
 	D_ATTR_CNONCE,		/* int */
 	D_ATTR_OPAQUE,		/* char * */
 	D_ATTR_URI,		/* char * */
-	D_ATTR_METHOD,		/* char * */
+	D_ATTR_METHOD,		/* int */
 	D_ATTR_ALGORITHM,	/* int */
 	D_ATTR_QOP,		/* int */
 	D_ATTR_NONCE_COUNT	/* int */
@@ -33,6 +33,15 @@ typedef enum {
 #define DIGEST_QOP_NOT_SET 	0
 #define DIGEST_QOP_AUTH 	1
 #define DIGEST_QOP_AUTH_INT	2 /* Not supported yet */
+
+/* Method values */
+#define DIGEST_METHOD_OPTIONS 	1
+#define DIGEST_METHOD_GET 	2
+#define DIGEST_METHOD_HEAD 	3
+#define DIGEST_METHOD_POST 	4
+#define DIGEST_METHOD_PUT 	5
+#define DIGEST_METHOD_DELETE 	6
+#define DIGEST_METHOD_TRACE 	7
 
 /**
  * Creates a new digest object.

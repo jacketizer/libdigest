@@ -9,9 +9,9 @@ typedef struct {
 	unsigned int cnonce;
 	char *opaque;
 	char *uri;
-	char *method;
+	unsigned int method;
 	char algorithm;
-	char qop;
+	unsigned int qop;
 	unsigned int nc;
 } digest_s;
 

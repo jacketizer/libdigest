@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	digest_set_attr(d, D_ATTR_USERNAME, "jack");
 	digest_set_attr(d, D_ATTR_PASSWORD, "Pass0rd");
 	digest_set_attr(d, D_ATTR_URI, "/api/user");
-	digest_set_attr(d, D_ATTR_METHOD, "POST");
+	digest_set_attr(d, D_ATTR_METHOD, DIGEST_METHOD_POST);
 	char *v = digest_get_hval(d);
 
 	printf("Authorization:\n%s\n", v);

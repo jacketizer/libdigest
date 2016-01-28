@@ -359,7 +359,7 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 	case D_ATTR_URI:
 		return dig->uri;
 	case D_ATTR_METHOD:
-		return dig->uri;
+		return &(dig->method);
 	case D_ATTR_ALGORITHM:
 		return &(dig->algorithm);
 	case D_ATTR_QOP:
@@ -390,7 +390,7 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 		dig->nonce = strdup((const char *) value);
 		break;
 	case D_ATTR_CNONCE:
-		dig->cnonce = *((unsigned int *) value);
+		dig->cnonce = (unsigned int) value;
 		break;
 	case D_ATTR_OPAQUE:
 		dig->opaque = strdup((const char *) value);
@@ -399,16 +399,16 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 		dig->uri = strdup((const char *) value);
 		break;
 	case D_ATTR_METHOD:
-		dig->method = strdup((const char *) value);
+		dig->method = (unsigned int) value;
 		break;
 	case D_ATTR_ALGORITHM:
-		dig->algorithm = *((char *) value);
+		dig->algorithm = (unsigned int) value;
 		break;
 	case D_ATTR_QOP:
-		dig->qop = *((char *) value);
+		dig->qop = (unsigned int) value;
 		break;
 	case D_ATTR_NONCE_COUNT:
-		dig->nc = *((unsigned int *) value);
+		dig->nc = (unsigned int) value;
 		break;
 	default:
 		return -1;
@@ -423,12 +423,12 @@ digest_get_hval(digest_t digest)
 	digest_s *dig = (digest_s *) digest;
 	char *hash_a1, *hash_a2, *hash_res;
 	char *header_val;
-	char *qop_value, *algorithm_value;
+	char *qop_value, *algorithm_value, *method_value;
 
 	/* Build Quality of Protection - qop */
-	if ((int) DIGEST_QOP_AUTH == (int) ((char) DIGEST_QOP_AUTH & dig->qop)) {
+	if (DIGEST_QOP_AUTH == DIGEST_QOP_AUTH & dig->qop) {
 		qop_value = "auth";
-	} else if ((int) DIGEST_QOP_AUTH_INT == (int) ((char) DIGEST_QOP_AUTH_INT & dig->qop)) {
+	} else if (DIGEST_QOP_AUTH_INT == DIGEST_QOP_AUTH_INT & dig->qop) {
 		/* auth-int, which is not supported */
 		return (char *) NULL;
 	}
@@ -439,9 +439,36 @@ digest_get_hval(digest_t digest)
 		algorithm_value = "MD5";
 	}
 
+	/* Set method */
+  switch (dig->method) {
+  case DIGEST_METHOD_OPTIONS:
+		method_value = "OPTIONS";
+    break;
+  case DIGEST_METHOD_GET:
+		method_value = "GET";
+    break;
+  case DIGEST_METHOD_HEAD:
+		method_value = "HEAD";
+    break;
+  case DIGEST_METHOD_POST:
+		method_value = "POST";
+    break;
+  case DIGEST_METHOD_PUT:
+		method_value = "PUT";
+    break;
+  case DIGEST_METHOD_DELETE:
+		method_value = "DELETE";
+    break;
+  case DIGEST_METHOD_TRACE:
+		method_value = "TRACE";
+    break;
+  default:
+    return (char *) NULL;
+  }
+
 	/* Generate the hashes */
 	hash_a1 = _dgst_generate_a1(dig->username, dig->realm, dig->password);
-	hash_a2 = _dgst_generate_a2(dig->method, dig->uri);
+	hash_a2 = _dgst_generate_a2(method_value, dig->uri);
 
 	if (DIGEST_QOP_NOT_SET != dig->qop) {
 		hash_res = _dgst_generate_response_auth(hash_a1, dig->nonce, dig->nc, dig->cnonce, qop_value, hash_a2);
