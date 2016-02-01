@@ -37,6 +37,7 @@ How to use it
 First, include the header files:
 
 ```C
+#include <stdio.h>
 #include <digest.h>
 #include <digest/client.h>
 ```
@@ -70,7 +71,7 @@ All the code (compile with `-ldigest`):
 
 int main(int argc, char **argv)
 {
-	char *digest_str = "Digest realm=\"api\", qop=auth, nonce=dcd98b7102dd2f0e8b11d0f600bfb0c093";
+	char *digest_str = "Digest realm=\"api\", qop=\"auth-int,auth\", nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\"";
 	printf("WWW-Authentication: %s\n", digest_str);
 
 	digest_t d = digest_create(digest_str);
