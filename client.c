@@ -208,7 +208,7 @@ _dgst_generate_a2(const char *method, const char *uri)
 static inline char *
 _dgst_generate_a1(const char *username, const char *realm, const char *password)
 {
-	char raw[512];
+	char raw[768];
 	sprintf(raw, "%s:%s:%s", username, realm, password);
 	return _get_md5(raw);
 }
@@ -261,13 +261,12 @@ _dgst_generate_response(const char *ha1, const char *nonce, const char *ha2)
 int
 _dgst_parse(digest_s *dig, const char *digest_string)
 {
-	int i = 0;
+	int n, i = 0;
 	char *val, *parameters;
 	char *values[12];
-	int n;
 
-  parameters = _crop_sentence(digest_string);
-  n = _tokenize_sentence(parameters, values, 12);
+	parameters = _crop_sentence(digest_string);
+	n = _tokenize_sentence(parameters, values, 12);
 
 	while (i < n) {
 		val = values[i++];
