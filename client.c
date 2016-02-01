@@ -340,6 +340,16 @@ digest_create(const char *digest_string)
 	return (digest_t) dig;
 }
 
+void
+digest_free(digest_t digest)
+{
+	digest_s *dig = (digest_s *) digest;
+
+	free(dig);
+
+	return;
+}
+
 void *
 digest_get_attr(digest_t digest, digest_attr_t attr)
 {

@@ -1,6 +1,8 @@
 libdigest
 =========
 
+[![Build Status](https://travis-ci.org/jacketizer/libdigest.svg?branch=master)](https://travis-ci.org/jacketizer/libdigest)
+
 Libdigest is a small C library for parsing and generating HTTP Digest Access
 Authentication ([rfc2617](https://www.ietf.org/rfc/rfc2617.txt)) header
 strings, both server side and client side.

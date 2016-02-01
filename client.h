@@ -63,6 +63,13 @@ extern digest_t digest_create(const char *digest_string);
 extern void * digest_get_attr(digest_t digest, digest_attr_t attr);
 
 /**
+ * Frees a digest object.
+ *
+ * @param digest_t *digest The digest object to free.
+ */
+void digest_free(digest_t digest);
+
+/**
  * Sets an attribute on a digest object.
  *
  * @param digest_t *digest The digest object to set attribute to.

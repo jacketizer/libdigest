@@ -30,6 +30,13 @@ install: all
 examples: examples/client.c
 	$(CC) examples/client.c -ldigest -o client
 
+.PHONY: check
+check:
+	export LIBRARY_PATH="./";
+	export C_INCLUDE_PATH="./";
+	export LD_LIBRARY_PATH="./";
+	$(CC) tests/test_lib.c -ldigest -o test_lib && ./test_lib
+
 .PHONY: clean
 clean:
 	rm -f *.o
