@@ -76,7 +76,7 @@ _dgst_get_val(char *parameter)
  * the authentication parameters.
  */
 static char *
-_crop_sentence(char *header_value)
+_crop_sentence(const char *header_value)
 {
  	/* Skip Digest word, and duplicate string */
 	return strdup(header_value + 7);
@@ -191,7 +191,7 @@ _tokenize_sentence(char *sentence, char **values, int max_values)
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 static inline char *
-_dgst_generate_a2(char *method, char *uri)
+_dgst_generate_a2(const char *method, const char *uri)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s", method, uri);
@@ -206,7 +206,7 @@ _dgst_generate_a2(char *method, char *uri)
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 static inline char *
-_dgst_generate_a1(char *username, char *realm, char *password)
+_dgst_generate_a1(const char *username, const char *realm, const char *password)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", username, realm, password);
@@ -224,7 +224,7 @@ _dgst_generate_a1(char *username, char *realm, char *password)
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 static inline char *
-_dgst_generate_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned int cnonce, char *qop, char *ha2)
+_dgst_generate_response_auth(const char *ha1, const char *nonce, unsigned int nc, unsigned int cnonce, const char *qop, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
@@ -242,7 +242,7 @@ _dgst_generate_response_auth(char *ha1, char *nonce, unsigned int nc, unsigned i
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 static inline char *
-_dgst_generate_response(char *ha1, char *nonce, char *ha2)
+_dgst_generate_response(const char *ha1, const char *nonce, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", ha1, nonce, ha2);
@@ -259,12 +259,15 @@ _dgst_generate_response(char *ha1, char *nonce, char *ha2)
  * Returns the hash as a null terminated string. Should be free'd manually.
  */
 int
-_dgst_parse(digest_s *dig, char *digest_string)
+_dgst_parse(digest_s *dig, const char *digest_string)
 {
 	int i = 0;
-	char *val;
+	char *val, *parameters;
 	char *values[12];
-	int n = _tokenize_sentence(_crop_sentence(digest_string), values, 12);
+	int n;
+
+  parameters = _crop_sentence(digest_string);
+  n = _tokenize_sentence(parameters, values, 12);
 
 	while (i < n) {
 		val = values[i++];
@@ -303,20 +306,20 @@ _dgst_parse(digest_s *dig, char *digest_string)
 }
 
 int
-digest_is_digest(char *header_value)
+digest_is_digest(const char *header_value)
 {
-  if (NULL == header_value) {
-    return -1;
-  }
-  if (0 != strncmp(header_value, "Digest", 6)) {
-    return -1;
-  }
+	if (NULL == header_value) {
+		return -1;
+	}
+	if (0 != strncmp(header_value, "Digest", 6)) {
+		return -1;
+	}
 
-  return 0;
+	return 0;
 }
 
 digest_t
-digest_create(char *digest_string)
+digest_create(const char *digest_string)
 {
 	digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
 	if (NULL == dig) {
@@ -417,6 +420,61 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 	return 0;
 }
 
+int
+_check_string(const char *string)
+{
+	if (NULL == string) {
+		return -1;
+	}
+
+	if (255 < strlen(string)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+_validate_attributes(digest_s *dig)
+{
+	if (-1 == _check_string(dig->username)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->password)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->uri)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->realm)) {
+		return -1;
+	}
+	if (NULL != dig->opaque && 255 < strlen(dig->opaque)) {
+		return -1;
+	}
+
+	/* nonce */
+	if (DIGEST_QOP_NOT_SET != dig->qop && -1 == _check_string(dig->nonce)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * Generates the Authentication header string.
+ *
+ * Attributes that must be set before calling this function:
+ *
+ *  - Username
+ *  - Password
+ *  - URI
+ *  - Method
+ *
+ * If not set (e.g. NULL or 0), NULL will be returned.
+ *
+ * Returns a pointer to the string, must be manually free'd.
+ */
 char *
 digest_get_hval(digest_t digest)
 {
@@ -425,10 +483,15 @@ digest_get_hval(digest_t digest)
 	char *header_val;
 	char *qop_value, *algorithm_value, *method_value;
 
+	/* Check length of char attributes to prevent buffer overflow */
+	if (-1 == _validate_attributes(dig)) {
+		return (char *) NULL;
+	}
+
 	/* Build Quality of Protection - qop */
-	if (DIGEST_QOP_AUTH == DIGEST_QOP_AUTH & dig->qop) {
+	if (DIGEST_QOP_AUTH == (DIGEST_QOP_AUTH & dig->qop)) {
 		qop_value = "auth";
-	} else if (DIGEST_QOP_AUTH_INT == DIGEST_QOP_AUTH_INT & dig->qop) {
+	} else if (DIGEST_QOP_AUTH_INT == (DIGEST_QOP_AUTH_INT & dig->qop)) {
 		/* auth-int, which is not supported */
 		return (char *) NULL;
 	}
@@ -440,31 +503,31 @@ digest_get_hval(digest_t digest)
 	}
 
 	/* Set method */
-  switch (dig->method) {
-  case DIGEST_METHOD_OPTIONS:
+	switch (dig->method) {
+	case DIGEST_METHOD_OPTIONS:
 		method_value = "OPTIONS";
-    break;
-  case DIGEST_METHOD_GET:
+		break;
+	case DIGEST_METHOD_GET:
 		method_value = "GET";
-    break;
-  case DIGEST_METHOD_HEAD:
+		break;
+	case DIGEST_METHOD_HEAD:
 		method_value = "HEAD";
-    break;
-  case DIGEST_METHOD_POST:
+		break;
+	case DIGEST_METHOD_POST:
 		method_value = "POST";
-    break;
-  case DIGEST_METHOD_PUT:
+		break;
+	case DIGEST_METHOD_PUT:
 		method_value = "PUT";
-    break;
-  case DIGEST_METHOD_DELETE:
+		break;
+	case DIGEST_METHOD_DELETE:
 		method_value = "DELETE";
-    break;
-  case DIGEST_METHOD_TRACE:
+		break;
+	case DIGEST_METHOD_TRACE:
 		method_value = "TRACE";
-    break;
-  default:
-    return (char *) NULL;
-  }
+		break;
+	default:
+		return (char *) NULL;
+	}
 
 	/* Generate the hashes */
 	hash_a1 = _dgst_generate_a1(dig->username, dig->realm, dig->password);

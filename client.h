@@ -50,7 +50,7 @@ typedef enum {
  *
  * @returns digest_t The digest object used in other calls.
  */
-extern digest_t digest_create(char *digest_string);
+extern digest_t digest_create(const char *digest_string);
 
 /**
  * Gets an attribute from a digest object.
@@ -82,7 +82,7 @@ extern int digest_set_attr(digest_t digest, digest_attr_t attr, const void *valu
  *
  * @returns int 0 if digest scheme, otherwise -1.
  */
-extern int digest_is_digest(char *header_value);
+extern int digest_is_digest(const char *header_value);
 
 /**
  * Generates the Authorization header value.
