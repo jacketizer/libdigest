@@ -419,6 +419,13 @@ digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
 	return 0;
 }
 
+/**
+ * Checks if a string pointer is NULL or if the length is more than 255 chars.
+ *
+ * string is the string to check.
+ *
+ * Returns 0 if not NULL and length is below 256 characters, otherwise -1.
+ */
 int
 _check_string(const char *string)
 {
@@ -426,13 +433,24 @@ _check_string(const char *string)
 		return -1;
 	}
 
-	if (255 < strlen(string)) {
+	if (256 < strlen(string)) {
 		return -1;
 	}
 
 	return 0;
 }
 
+/**
+ * Validates the string values in a digest struct.
+ *
+ * The function goes through the string values and check if they are valid.
+ * They are considered valid if they aren't NULL and the character length is
+ * below 256.
+ *
+ * dig is a pointer to the struct where to check the string values.
+ *
+ * Returns 0 if valid, otherwise -1.
+ */
 int
 _validate_attributes(digest_s *dig)
 {
@@ -448,7 +466,7 @@ _validate_attributes(digest_s *dig)
 	if (-1 == _check_string(dig->realm)) {
 		return -1;
 	}
-	if (NULL != dig->opaque && 255 < strlen(dig->opaque)) {
+	if (NULL != dig->opaque && 256 < strlen(dig->opaque)) {
 		return -1;
 	}
 
@@ -463,14 +481,14 @@ _validate_attributes(digest_s *dig)
 /**
  * Generates the Authentication header string.
  *
- * Attributes that must be set before calling this function:
+ * Attributes that must be set manually before calling this function:
  *
  *  - Username
  *  - Password
  *  - URI
  *  - Method
  *
- * If not set (e.g. NULL or 0), NULL will be returned.
+ * If not set, NULL will be returned.
  *
  * Returns a pointer to the string, must be manually free'd.
  */
