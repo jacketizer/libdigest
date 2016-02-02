@@ -545,11 +545,7 @@ digest_get_hval(digest_t digest)
 	}
 
 	/* Generate the minimum digest header string */
-	sprintf(header_val, "Digest \
-	    username=\"%s\", \
-	    realm=\"%s\", \
-	    uri=\"%s\", \
-	    response=\"%s\"",\
+	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=\"%s\", response=\"%s\"",\
 	    dig->username,\
 	    dig->realm,\
 	    dig->uri,\
@@ -557,25 +553,18 @@ digest_get_hval(digest_t digest)
 
 	/* opaque */
 	if (NULL != dig->opaque) {
-		sprintf(header_val + strlen(header_val), ", \
-	    	    opaque=\"%s\"",\
-	    	    dig->opaque);
+		sprintf(header_val + strlen(header_val), ", opaque=\"%s\"", dig->opaque);
 	}
 
 	/* algorithm */
 	if (DIGEST_ALGORITHM_NOT_SET != dig->algorithm) {
-		sprintf(header_val + strlen(header_val), ", \
-	    	    algorithm=\"%s\"",\
+		sprintf(header_val + strlen(header_val), ", algorithm=\"%s\"",\
 	    	    algorithm_value);
 	}
 
 	/* If qop is supplied, add nonce, cnonce, nc and qop */
 	if (DIGEST_QOP_NOT_SET != dig->qop) {
-		sprintf(header_val + strlen(header_val), ", \
-		    qop=%s, \
-		    nonce=\"%s\", \
-		    cnonce=\"%08x\", \
-		    nc=%08x",\
+		sprintf(header_val + strlen(header_val), ", qop=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x",\
 		    qop_value,\
 		    dig->nonce,\
 		    dig->cnonce,\
