@@ -32,9 +32,6 @@ examples: examples/client.c
 
 .PHONY: check
 check:
-	export LIBRARY_PATH="./";
-	export C_INCLUDE_PATH="./";
-	export LD_LIBRARY_PATH="./";
 	$(CC) tests/test_lib.c -ldigest -o test_lib && ./test_lib
 
 .PHONY: clean
