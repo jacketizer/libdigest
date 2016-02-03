@@ -43,7 +43,7 @@ _get_md5(const char *string)
 static char *
 _dgst_get_val(char *parameter)
 {
-	char *cursor;
+	char *cursor, *q;
 
 	/* Find start of value */
 	cursor = strchr(parameter, '=');
@@ -57,7 +57,7 @@ _dgst_get_val(char *parameter)
 	}
 	cursor++;
 
-	char *q = strchr(cursor, '"');
+	q = strchr(cursor, '"');
 	if (NULL == q) {
 		return (char *) NULL;
 	}
@@ -100,9 +100,9 @@ _split_sentence(char *sentence, char **values, int max_values)
 	char *cursor = sentence;
 	int length = strlen(sentence);
 
-	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
+	while (i < max_values && '\0' != *cursor && cursor - sentence < length) {
 		/* Rewind to after spaces */
-		while (*cursor == ' ' || *cursor == ',') {
+		while (' ' == *cursor || ',' == *cursor) {
 			cursor++;
 		}
 
@@ -142,7 +142,7 @@ _tokenize_sentence(char *sentence, char **values, int max_values)
 
 	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
 		/* Rewind to after spaces */
-		while (*cursor == ' ' || *cursor == ',') {
+		while (' ' == *cursor || ',' == *cursor) {
 			cursor++;
 		}
 
@@ -433,7 +433,7 @@ _check_string(const char *string)
 		return -1;
 	}
 
-	if (256 < strlen(string)) {
+	if (255 < strlen(string)) {
 		return -1;
 	}
 
@@ -466,7 +466,7 @@ _validate_attributes(digest_s *dig)
 	if (-1 == _check_string(dig->realm)) {
 		return -1;
 	}
-	if (NULL != dig->opaque && 256 < strlen(dig->opaque)) {
+	if (NULL != dig->opaque && 255 < strlen(dig->opaque)) {
 		return -1;
 	}
 
