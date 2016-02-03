@@ -1,4 +1,4 @@
 language: c
-install: make
+install: make && PREFIX=target make install
 script:
   - make check
