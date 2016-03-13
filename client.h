@@ -47,7 +47,7 @@ typedef enum {
 /**
  * Parse a digest string.
  *
- * @param digest_t digest The digest context.
+ * @param digest_t *digest The digest context.
  * @param char *digest_string The header value of the WWW-Authenticate header.
  *
  * @returns int 0 on success, otherwise -1.
@@ -97,10 +97,10 @@ extern int digest_is_digest(const char *header_value);
  * Generate the Authorization header value.
  *
  * @param digest_t *digest The digest context to generate the header value from.
+ * @param char *result The buffer to store the generated header value in.
  *
- * @returns char * the header string. Should be free'd manually. Returns NULL
- * on failure.
+ * Returns the number of bytes in the result string. -1 on failure.
  */
-extern char * digest_get_hval(digest_t *digest);
+extern int digest_get_hval(digest_t *digest, char *result, int max_length);
 
 #endif  /* INC_DIGEST_H */

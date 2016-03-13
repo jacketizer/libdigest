@@ -6,7 +6,7 @@ int
 main(int argc, char **argv)
 {
 	digest_t d; /* the digest context */
-	char *result;
+	char result[4096];
 	char digest_str[] = "Digest realm=\"test\", qop=\"auth,auth-int\", nonce=\"9e9cb182c25b68148676a98cda86d501\"";
 
 	printf("WWW-Authentication:\n%s\n", digest_str);
@@ -26,15 +26,13 @@ main(int argc, char **argv)
 	digest_set_attr(&d, D_ATTR_URI, "/api/test");
 	digest_set_attr(&d, D_ATTR_METHOD, DIGEST_METHOD_POST);
 
-	result = digest_get_hval(&d);
-	if (NULL == result) {
+	;
+	if (-1 == digest_get_hval(&d, result, sizeof (result))) {
 		fprintf(stderr, "Could not build the Authorization header!\n");
 		exit(1);
 	}
 
 	printf("Authorization:\n%s\n", result);
-
-	free(result);
 
 	return 0;
 }

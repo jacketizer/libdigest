@@ -310,6 +310,7 @@ digest_is_digest(const char *header_value)
 	if (NULL == header_value) {
 		return -1;
 	}
+
 	if (0 != strncmp(header_value, "Digest", 6)) {
 		return -1;
 	}
@@ -494,19 +495,19 @@ _validate_attributes(digest_s *dig)
  *
  * If not set, NULL will be returned.
  *
- * Returns a pointer to the string, must be manually free'd.
+ * Returns the number of bytes in the result string.
  */
-char *
-digest_get_hval(digest_t *digest)
+int
+digest_get_hval(digest_t *digest, char *result, int max_length)
 {
 	digest_s *dig = (digest_s *) digest;
 	char *hash_a1, *hash_a2, *hash_res;
-	char *header_val;
 	char *qop_value, *algorithm_value, *method_value;
+	int result_size, sz; /* The size of the result string */
 
 	/* Check length of char attributes to prevent buffer overflow */
 	if (-1 == _validate_attributes(dig)) {
-		return (char *) NULL;
+		return -1;
 	}
 
 	/* Build Quality of Protection - qop */
@@ -514,7 +515,7 @@ digest_get_hval(digest_t *digest)
 		qop_value = "auth";
 	} else if (DIGEST_QOP_AUTH_INT == (DIGEST_QOP_AUTH_INT & dig->qop)) {
 		/* auth-int, which is not supported */
-		return (char *) NULL;
+		return -1;
 	}
 
 	/* Set algorithm */
@@ -547,7 +548,7 @@ digest_get_hval(digest_t *digest)
 		method_value = "TRACE";
 		break;
 	default:
-		return (char *) NULL;
+		return -1;
 	}
 
 	/* Generate the hashes */
@@ -560,37 +561,44 @@ digest_get_hval(digest_t *digest)
 		hash_res = _dgst_generate_response(hash_a1, dig->nonce, hash_a2);
 	}
 
-	header_val = malloc(4096);
-	if (NULL == header_val) {
-		/* Could not allocate memory for result string */
-		return (char *) NULL;
-	}
-
 	/* Generate the minimum digest header string */
-	sprintf(header_val, "Digest username=\"%s\", realm=\"%s\", uri=\"%s\", response=\"%s\"",\
+	result_size = snprintf(result, max_length, "Digest username=\"%s\", realm=\"%s\", uri=\"%s\", response=\"%s\"",\
 	    dig->username,\
 	    dig->realm,\
 	    dig->uri,\
 	    hash_res);
+	if (result_size == -1 || result_size == max_length) {
+		return -1;
+	}
 
 	/* opaque */
 	if (NULL != dig->opaque) {
-		sprintf(header_val + strlen(header_val), ", opaque=\"%s\"", dig->opaque);
+		sz = snprintf(result + result_size, max_length - result_size, ", opaque=\"%s\"", dig->opaque);
+		result_size += sz;
+		if (sz == -1 || result_size >= max_length) {
+			return -1;
+		}
 	}
 
 	/* algorithm */
 	if (DIGEST_ALGORITHM_NOT_SET != dig->algorithm) {
-		sprintf(header_val + strlen(header_val), ", algorithm=\"%s\"",\
+		sz = snprintf(result + result_size, max_length - result_size, ", algorithm=\"%s\"",\
 	    	    algorithm_value);
+		if (sz == -1 || result_size >= max_length) {
+			return -1;
+		}
 	}
 
 	/* If qop is supplied, add nonce, cnonce, nc and qop */
 	if (DIGEST_QOP_NOT_SET != dig->qop) {
-		sprintf(header_val + strlen(header_val), ", qop=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x",\
+		sz = snprintf(result + result_size, max_length - result_size, ", qop=%s, nonce=\"%s\", cnonce=\"%08x\", nc=%08x",\
 		    qop_value,\
 		    dig->nonce,\
 		    dig->cnonce,\
 		    dig->nc);
+		if (sz == -1 || result_size >= max_length) {
+			return -1;
+		}
 	}
 
 	free(hash_a1);
@@ -600,5 +608,5 @@ digest_get_hval(digest_t *digest)
 	/* Increase the count */
 	dig->nc++;
 
-	return header_val;
+	return result_size;
 }
