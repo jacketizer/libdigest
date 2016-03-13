@@ -317,13 +317,10 @@ digest_is_digest(const char *header_value)
 	return 0;
 }
 
-digest_t
-digest_create(const char *digest_string)
+int
+digest_parse(digest_t *digest, const char *digest_string)
 {
-	digest_s *dig = (digest_s *) malloc(sizeof (digest_s));
-	if (NULL == dig) {
-		return (digest_t) NULL;
-	}
+	digest_s *dig = (digest_s *) digest;
 
 	/* Initialize */
 	memset(dig, 0, sizeof (digest_s));
@@ -333,25 +330,22 @@ digest_create(const char *digest_string)
 	dig->qop = '\0';
 
 	if (-1 == _dgst_parse(dig, digest_string)) {
-		free(dig);
-		return (digest_t) NULL;
+		return -1;
 	}
 
-	return (digest_t) dig;
+	return 0;
 }
 
 void
-digest_free(digest_t digest)
+digest_free(digest_t *digest)
 {
 	digest_s *dig = (digest_s *) digest;
-
-	free(dig);
 
 	return;
 }
 
 void *
-digest_get_attr(digest_t digest, digest_attr_t attr)
+digest_get_attr(digest_t *digest, digest_attr_t attr)
 {
 	digest_s *dig = (digest_s *) digest;
 
@@ -384,7 +378,7 @@ digest_get_attr(digest_t digest, digest_attr_t attr)
 }
 
 int
-digest_set_attr(digest_t digest, digest_attr_t attr, const void *value)
+digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value)
 {
 	digest_s *dig = (digest_s *) digest;
 
@@ -503,7 +497,7 @@ _validate_attributes(digest_s *dig)
  * Returns a pointer to the string, must be manually free'd.
  */
 char *
-digest_get_hval(digest_t digest)
+digest_get_hval(digest_t *digest)
 {
 	digest_s *dig = (digest_s *) digest;
 	char *hash_a1, *hash_a2, *hash_res;

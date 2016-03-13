@@ -6,7 +6,8 @@
 #include <time.h>
 #include "digest.h"
 
-typedef digest_s* digest_t;
+/* Digest context type (digest struct) */
+typedef digest_s digest_t;
 
 /* The attributes found in a digest string, both WWW-Authenticate and
     Authorization headers.
@@ -44,35 +45,36 @@ typedef enum {
 #define DIGEST_METHOD_TRACE 	7
 
 /**
- * Creates a new digest object.
+ * Parse a digest string.
  *
+ * @param digest_t digest The digest context.
  * @param char *digest_string The header value of the WWW-Authenticate header.
  *
- * @returns digest_t The digest object used in other calls.
+ * @returns int 0 on success, otherwise -1.
  */
-extern digest_t digest_create(const char *digest_string);
+extern int digest_parse(digest_t *digest, const char *digest_string);
 
 /**
- * Gets an attribute from a digest object.
+ * Get an attribute from a digest context.
  *
- * @param digest_t *digest The digest object to get attribute from.
+ * @param digest_t *digest The digest context to get attribute from.
  * @param digest_attr_t attr Which attribute to get.
  *
  * @returns void * The attribute value, a C string or a pointer to an int.
  */
-extern void * digest_get_attr(digest_t digest, digest_attr_t attr);
+extern void * digest_get_attr(digest_t *digest, digest_attr_t attr);
 
 /**
- * Frees a digest object.
+ * Free a digest context.
  *
- * @param digest_t *digest The digest object to free.
+ * @param digest_t *digest The digest context to free.
  */
-void digest_free(digest_t digest);
+void digest_free(digest_t *digest);
 
 /**
- * Sets an attribute on a digest object.
+ * Set an attribute on a digest object.
  *
- * @param digest_t *digest The digest object to set attribute to.
+ * @param digest_t *digest The digest context to set attribute to.
  * @param digest_attr_t attr Which attribute to set.
  * @param const void *value Value to set the attribute to. If the value
  *        is a string, *value should be a C string (char *). If it is
@@ -80,10 +82,10 @@ void digest_free(digest_t digest);
  *
  * @returns int 0 on success, otherwise -1.
  */
-extern int digest_set_attr(digest_t digest, digest_attr_t attr, const void *value);
+extern int digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value);
 
 /**
- * Checks if WWW-Authenticate string is digest authentication scheme.
+ * Check if WWW-Authenticate string is digest authentication scheme.
  *
  * @param const char *header_value The value of the WWW-Authentication header.
  *
@@ -92,12 +94,13 @@ extern int digest_set_attr(digest_t digest, digest_attr_t attr, const void *valu
 extern int digest_is_digest(const char *header_value);
 
 /**
- * Generates the Authorization header value.
+ * Generate the Authorization header value.
  *
- * @param digest_t *digest The digest object to generate the header value from.
+ * @param digest_t *digest The digest context to generate the header value from.
  *
- * @returns char * the header string. Should be free'd manually.
+ * @returns char * the header string. Should be free'd manually. Returns NULL
+ * on failure.
  */
-extern char * digest_get_hval(digest_t digest);
+extern char * digest_get_hval(digest_t *digest);
 
 #endif  /* INC_DIGEST_H */
