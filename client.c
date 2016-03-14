@@ -133,12 +133,12 @@ _split_sentence(char *sentence, char **values, int max_values)
  *
  * Returns the number of values found in sentence.
  */
-static inline int
-_tokenize_sentence(char *sentence, char **values, int max_values)
+static inline unsigned int
+_tokenize_sentence(char *sentence, char **values, unsigned int max_values)
 {
-	int i = 0;
+	unsigned int i = 0;
 	char *cursor = sentence;
-	int length = strlen(sentence);
+	size_t length = strlen(sentence);
 
 	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
 		/* Rewind to after spaces */
@@ -340,8 +340,6 @@ digest_parse(digest_t *digest, const char *digest_string)
 void
 digest_free(digest_t *digest)
 {
-	digest_s *dig = (digest_s *) digest;
-
 	return;
 }
 
@@ -497,13 +495,14 @@ _validate_attributes(digest_s *dig)
  *
  * Returns the number of bytes in the result string.
  */
-int
-digest_get_hval(digest_t *digest, char *result, int max_length)
+size_t
+digest_get_hval(digest_t *digest, char *result, size_t max_length)
 {
 	digest_s *dig = (digest_s *) digest;
 	char *hash_a1, *hash_a2, *hash_res;
 	char *qop_value, *algorithm_value, *method_value;
-	int result_size, sz; /* The size of the result string */
+	int sz;
+	size_t result_size; /* The size of the result string */
 
 	/* Check length of char attributes to prevent buffer overflow */
 	if (-1 == _validate_attributes(dig)) {

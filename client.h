@@ -101,6 +101,6 @@ extern int digest_is_digest(const char *header_value);
  *
  * Returns the number of bytes in the result string. -1 on failure.
  */
-extern int digest_get_hval(digest_t *digest, char *result, int max_length);
+extern size_t digest_get_hval(digest_t *digest, char *result, size_t max_length);
 
 #endif  /* INC_DIGEST_H */
