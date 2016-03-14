@@ -10,16 +10,10 @@
  * manually free'd.
  */
 static char *
-_get_md5(const char *string)
+_get_md5(const char *string, char *result)
 {
 	int i = 0;
-	char *md5_string;
 	unsigned char digest[16];
-
-	md5_string = malloc(52);
-	if (NULL == md5_string) {
-		return (char *) NULL;
-	}
 
 	MD5_CTX context;
 	MD5_Init(&context);
@@ -27,10 +21,10 @@ _get_md5(const char *string)
 	MD5_Final(digest, &context);
 
 	for (i = 0; i < 16; ++i) {
-		sprintf(&md5_string[i * 2], "%02x", (unsigned int) digest[i]);
+		sprintf(&result[i * 2], "%02x", (unsigned int) digest[i]);
 	}
 
-	return md5_string;
+	return result;
 }
 
 /**
@@ -188,14 +182,14 @@ _tokenize_sentence(char *sentence, char **values, unsigned int max_values)
  *
  * Both method and uri should be null terminated strings.
  *
- * Returns the hash as a null terminated string. Should be free'd manually.
+ * Returns the hash as a null terminated string.
  */
 static inline char *
-_dgst_generate_a2(const char *method, const char *uri)
+_dgst_generate_a2(char *result, const char *method, const char *uri)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s", method, uri);
-	return _get_md5(raw);
+	return _get_md5(raw, result);
 }
 
 /**
@@ -203,14 +197,14 @@ _dgst_generate_a2(const char *method, const char *uri)
  *
  * All arguments should be null terminated strings.
  *
- * Returns the hash as a null terminated string. Should be free'd manually.
+ * Returns the hash as a null terminated string.
  */
 static inline char *
-_dgst_generate_a1(const char *username, const char *realm, const char *password)
+_dgst_generate_a1(char *result, const char *username, const char *realm, const char *password)
 {
 	char raw[768];
 	sprintf(raw, "%s:%s:%s", username, realm, password);
-	return _get_md5(raw);
+	return _get_md5(raw, result);
 }
 
 /**
@@ -221,14 +215,14 @@ _dgst_generate_a1(const char *username, const char *realm, const char *password)
  *
  * All arguments should be null terminated strings.
  *
- * Returns the hash as a null terminated string. Should be free'd manually.
+ * Returns the hash as a null terminated string.
  */
 static inline char *
-_dgst_generate_response_auth(const char *ha1, const char *nonce, unsigned int nc, unsigned int cnonce, const char *qop, const char *ha2)
+_dgst_generate_response_auth(char *result, const char *ha1, const char *nonce, unsigned int nc, unsigned int cnonce, const char *qop, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
-	return _get_md5(raw);
+	return _get_md5(raw, result);
 }
 
 /**
@@ -239,14 +233,14 @@ _dgst_generate_response_auth(const char *ha1, const char *nonce, unsigned int nc
  *
  * All arguments should be null terminated strings.
  *
- * Returns the hash as a null terminated string. Should be free'd manually.
+ * Returns the hash as a null terminated string.
  */
 static inline char *
-_dgst_generate_response(const char *ha1, const char *nonce, const char *ha2)
+_dgst_generate_response(char *result, const char *ha1, const char *nonce, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", ha1, nonce, ha2);
-	return _get_md5(raw);
+	return _get_md5(raw, result);
 }
 
 /**
@@ -499,10 +493,10 @@ size_t
 digest_get_hval(digest_t *digest, char *result, size_t max_length)
 {
 	digest_s *dig = (digest_s *) digest;
-	char *hash_a1, *hash_a2, *hash_res;
+	char hash_a1[52], hash_a2[52], hash_res[52];
 	char *qop_value, *algorithm_value, *method_value;
-	int sz;
 	size_t result_size; /* The size of the result string */
+	int sz;
 
 	/* Check length of char attributes to prevent buffer overflow */
 	if (-1 == _validate_attributes(dig)) {
@@ -551,13 +545,13 @@ digest_get_hval(digest_t *digest, char *result, size_t max_length)
 	}
 
 	/* Generate the hashes */
-	hash_a1 = _dgst_generate_a1(dig->username, dig->realm, dig->password);
-	hash_a2 = _dgst_generate_a2(method_value, dig->uri);
+	_dgst_generate_a1(hash_a1, dig->username, dig->realm, dig->password);
+	_dgst_generate_a2(hash_a2, method_value, dig->uri);
 
 	if (DIGEST_QOP_NOT_SET != dig->qop) {
-		hash_res = _dgst_generate_response_auth(hash_a1, dig->nonce, dig->nc, dig->cnonce, qop_value, hash_a2);
+		_dgst_generate_response_auth(hash_res, hash_a1, dig->nonce, dig->nc, dig->cnonce, qop_value, hash_a2);
 	} else {
-		hash_res = _dgst_generate_response(hash_a1, dig->nonce, hash_a2);
+		_dgst_generate_response(hash_res, hash_a1, dig->nonce, hash_a2);
 	}
 
 	/* Generate the minimum digest header string */
@@ -599,10 +593,6 @@ digest_get_hval(digest_t *digest, char *result, size_t max_length)
 			return -1;
 		}
 	}
-
-	free(hash_a1);
-	free(hash_a2);
-	free(hash_res);
 
 	/* Increase the count */
 	dig->nc++;
