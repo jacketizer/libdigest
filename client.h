@@ -65,20 +65,13 @@ extern int digest_parse(digest_t *digest, const char *digest_string);
 extern void * digest_get_attr(digest_t *digest, digest_attr_t attr);
 
 /**
- * Free a digest context.
- *
- * @param digest_t *digest The digest context to free.
- */
-void digest_free(digest_t *digest);
-
-/**
  * Set an attribute on a digest object.
  *
  * @param digest_t *digest The digest context to set attribute to.
  * @param digest_attr_t attr Which attribute to set.
  * @param const void *value Value to set the attribute to. If the value
  *        is a string, *value should be a C string (char *). If it is
- *        an integer, *value should be a pointer to an integer (unsigned int *).
+ *        an integer, *value should be a an integer (unsigned int).
  *
  * @returns int 0 on success, otherwise -1.
  */

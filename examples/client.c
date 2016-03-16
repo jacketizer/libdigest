@@ -26,7 +26,6 @@ main(int argc, char **argv)
 	digest_set_attr(&d, D_ATTR_URI, "/api/test");
 	digest_set_attr(&d, D_ATTR_METHOD, DIGEST_METHOD_POST);
 
-	;
 	if (-1 == digest_get_hval(&d, result, sizeof (result))) {
 		fprintf(stderr, "Could not build the Authorization header!\n");
 		exit(1);

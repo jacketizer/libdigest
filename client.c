@@ -310,8 +310,10 @@ digest_parse(digest_t *digest, const char *digest_string)
 {
 	digest_s *dig = (digest_s *) digest;
 
-	/* Initialize */
+	/* Clear */
 	memset(dig, 0, sizeof (digest_s));
+
+	/* Set default values */
 	dig->nc = 1;
 	dig->cnonce = time(NULL);
 	dig->algorithm = DIGEST_ALGORITHM_MD5;
@@ -322,12 +324,6 @@ digest_parse(digest_t *digest, const char *digest_string)
 	}
 
 	return 0;
-}
-
-void
-digest_free(digest_t *digest)
-{
-	return;
 }
 
 void *
@@ -370,25 +366,25 @@ digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value)
 
 	switch (attr) {
 	case D_ATTR_USERNAME:
-		dig->username = strdup((const char *) value);
+		dig->username = (const char *) value;
 		break;
 	case D_ATTR_PASSWORD:
-		dig->password = strdup((const char *) value);
+		dig->password = (const char *) value;
 		break;
 	case D_ATTR_REALM:
-		dig->realm = strdup((const char *) value);
+		dig->realm = (const char *) value;
 		break;
 	case D_ATTR_NONCE:
-		dig->nonce = strdup((const char *) value);
+		dig->nonce = (const char *) value;
 		break;
 	case D_ATTR_CNONCE:
 		dig->cnonce = (unsigned int) value;
 		break;
 	case D_ATTR_OPAQUE:
-		dig->opaque = strdup((const char *) value);
+		dig->opaque = (const char *) value;
 		break;
 	case D_ATTR_URI:
-		dig->uri = strdup((const char *) value);
+		dig->uri = (const char *) value;
 		break;
 	case D_ATTR_METHOD:
 		dig->method = (unsigned int) value;
