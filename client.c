@@ -5,11 +5,10 @@
  * Generates an MD5 hash from a string.
  *
  * string needs to be null terminated.
- *
- * Returns a pointer to the MD5 string on success, otherwise NULL. Needs to be
- * manually free'd.
+ * result is the buffer where to store the md5 hash. The length will always be
+ * 32 characters long.
  */
-static char *
+static void
 _get_md5(const char *string, char *result)
 {
 	int i = 0;
@@ -23,8 +22,6 @@ _get_md5(const char *string, char *result)
 	for (i = 0; i < 16; ++i) {
 		sprintf(&result[i * 2], "%02x", (unsigned int) digest[i]);
 	}
-
-	return result;
 }
 
 /**
@@ -180,31 +177,29 @@ _tokenize_sentence(char *sentence, char **values, unsigned int max_values)
 /**
  * Hashes method and URI (ex: GET:/api/users).
  *
+ * result is the buffer where to store the generated md5 hash.
  * Both method and uri should be null terminated strings.
- *
- * Returns the hash as a null terminated string.
  */
-static inline char *
+static inline void
 _dgst_generate_a2(char *result, const char *method, const char *uri)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s", method, uri);
-	return _get_md5(raw, result);
+	_get_md5(raw, result);
 }
 
 /**
  * Hashes username, realm and password (ex: jack:GET:password).
  *
- * All arguments should be null terminated strings.
- *
- * Returns the hash as a null terminated string.
+ * result is the buffer where to store the generated md5 hash.
+ * All other arguments should be null terminated strings.
  */
-static inline char *
+static inline void
 _dgst_generate_a1(char *result, const char *username, const char *realm, const char *password)
 {
 	char raw[768];
 	sprintf(raw, "%s:%s:%s", username, realm, password);
-	return _get_md5(raw, result);
+	_get_md5(raw, result);
 }
 
 /**
@@ -213,16 +208,15 @@ _dgst_generate_a1(char *result, const char *username, const char *realm, const c
  * Hashes a1, nonce, nc, cnonce, qop and a2. This should be used when the
  * qop parameter is supplied.
  *
- * All arguments should be null terminated strings.
- *
- * Returns the hash as a null terminated string.
+ * result is the buffer where to store the generated md5 hash.
+ * All other arguments should be null terminated strings.
  */
-static inline char *
+static inline void
 _dgst_generate_response_auth(char *result, const char *ha1, const char *nonce, unsigned int nc, unsigned int cnonce, const char *qop, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%08x:%08x:%s:%s", ha1, nonce, nc, cnonce, qop, ha2);
-	return _get_md5(raw, result);
+	_get_md5(raw, result);
 }
 
 /**
@@ -231,16 +225,15 @@ _dgst_generate_response_auth(char *result, const char *ha1, const char *nonce, u
  * Hashes a1, nonce and a2. This is the version used when the qop parameter is
  * not supplied.
  *
- * All arguments should be null terminated strings.
- *
- * Returns the hash as a null terminated string.
+ * result is the buffer where to store the generated md5 hash.
+ * All other arguments should be null terminated strings.
  */
-static inline char *
+static inline void
 _dgst_generate_response(char *result, const char *ha1, const char *nonce, const char *ha2)
 {
 	char raw[512];
 	sprintf(raw, "%s:%s:%s", ha1, nonce, ha2);
-	return _get_md5(raw, result);
+	_get_md5(raw, result);
 }
 
 /**
@@ -426,11 +419,7 @@ digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value)
 int
 _check_string(const char *string)
 {
-	if (NULL == string) {
-		return -1;
-	}
-
-	if (255 < strlen(string)) {
+	if (NULL == string || 255 < strlen(string)) {
 		return -1;
 	}
 
