@@ -6,6 +6,24 @@
 #include <time.h>
 #include "digest.h"
 
+/* Supported hashing algorithms */
+#define DIGEST_ALGORITHM_NOT_SET	0
+#define DIGEST_ALGORITHM_MD5		1
+
+/* Quality of Protection (qop) values */
+#define DIGEST_QOP_NOT_SET 	0
+#define DIGEST_QOP_AUTH 	1
+#define DIGEST_QOP_AUTH_INT	2 /* Not supported yet */
+
+/* Method values */
+#define DIGEST_METHOD_OPTIONS	1
+#define DIGEST_METHOD_GET   	2
+#define DIGEST_METHOD_HEAD  	3
+#define DIGEST_METHOD_POST  	4
+#define DIGEST_METHOD_PUT   	5
+#define DIGEST_METHOD_DELETE	6
+#define DIGEST_METHOD_TRACE 	7
+
 /* Digest context type (digest struct) */
 typedef digest_s digest_t;
 
@@ -26,23 +44,11 @@ typedef enum {
 	D_ATTR_NONCE_COUNT	/* int */
 } digest_attr_t;
 
-/* Supported hashing algorithms */
-#define DIGEST_ALGORITHM_NOT_SET	0
-#define DIGEST_ALGORITHM_MD5		1
-
-/* Quality of Protection (qop) values */
-#define DIGEST_QOP_NOT_SET 	0
-#define DIGEST_QOP_AUTH 	1
-#define DIGEST_QOP_AUTH_INT	2 /* Not supported yet */
-
-/* Method values */
-#define DIGEST_METHOD_OPTIONS 	1
-#define DIGEST_METHOD_GET 	2
-#define DIGEST_METHOD_HEAD 	3
-#define DIGEST_METHOD_POST 	4
-#define DIGEST_METHOD_PUT 	5
-#define DIGEST_METHOD_DELETE 	6
-#define DIGEST_METHOD_TRACE 	7
+typedef union {
+	int number;
+	char *string;
+	const char *string2;
+} digest_attr_value_t;
 
 /**
  * Parse a digest string.
@@ -75,7 +81,7 @@ extern void * digest_get_attr(digest_t *digest, digest_attr_t attr);
  *
  * @returns int 0 on success, otherwise -1.
  */
-extern int digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value);
+extern int digest_set_attr(digest_t *digest, digest_attr_t attr, const digest_attr_value_t value);
 
 /**
  * Check if WWW-Authenticate string is digest authentication scheme.

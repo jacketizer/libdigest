@@ -54,10 +54,10 @@ digest_parse(&d, "Digest realm=\"api\", qop=\"auth,auth-int\", nonce=dcd98b7102d
 Then supply the username, password, URI and HTTP method like below:
 
 ```C
-digest_set_attr(&d, D_ATTR_USERNAME, "jack");
-digest_set_attr(&d, D_ATTR_PASSWORD, "Passw0rd");
-digest_set_attr(&d, D_ATTR_URI, "/api/test");
-digest_set_attr(&d, D_ATTR_METHOD, DIGEST_METHOD_POST);
+digest_set_attr(&d, D_ATTR_USERNAME, (digest_attr_value_t) "jack");
+digest_set_attr(&d, D_ATTR_PASSWORD, (digest_attr_value_t) "Passw0rd");
+digest_set_attr(&d, D_ATTR_URI, (digest_attr_value_t) "/api/resource");
+digest_set_attr(&d, D_ATTR_METHOD, (digest_attr_value_t) DIGEST_METHOD_POST);
 ```
 
 To generate the string to use in the `Authorization` header, call `digest_get_hval()`, as below:
@@ -83,10 +83,10 @@ main(int argc, char **argv)
 	printf("WWW-Authentication: %s\n", digest_str);
 
 	digest_parse(&d, digest_str);
-	digest_set_attr(&d, D_ATTR_USERNAME, "jack");
-	digest_set_attr(&d, D_ATTR_PASSWORD, "Pass0rd");
-	digest_set_attr(&d, D_ATTR_URI, "/api/user");
-	digest_set_attr(&d, D_ATTR_METHOD, DIGEST_METHOD_POST);
+	digest_set_attr(&d, D_ATTR_USERNAME, (digest_attr_value_t) "jack");
+	digest_set_attr(&d, D_ATTR_PASSWORD, (digest_attr_value_t) "Passw0rd");
+	digest_set_attr(&d, D_ATTR_URI, (digest_attr_value_t) "/api/resource");
+	digest_set_attr(&d, D_ATTR_METHOD, (digest_attr_value_t) DIGEST_METHOD_POST);
 
 	digest_get_hval(&d, result, sizeof (result));
 	printf("Authorization: %s\n", result);

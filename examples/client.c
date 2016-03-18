@@ -21,10 +21,10 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	digest_set_attr(&d, D_ATTR_USERNAME, "jack");
-	digest_set_attr(&d, D_ATTR_PASSWORD, "Pass0rd");
-	digest_set_attr(&d, D_ATTR_URI, "/api/test");
-	digest_set_attr(&d, D_ATTR_METHOD, DIGEST_METHOD_POST);
+	digest_set_attr(&d, D_ATTR_USERNAME, (digest_attr_value_t) "jack");
+	digest_set_attr(&d, D_ATTR_PASSWORD, (digest_attr_value_t) "Passw0rd");
+	digest_set_attr(&d, D_ATTR_URI, (digest_attr_value_t) "/api/resource");
+	digest_set_attr(&d, D_ATTR_METHOD, (digest_attr_value_t) DIGEST_METHOD_POST);
 
 	if (-1 == digest_get_hval(&d, result, sizeof (result))) {
 		fprintf(stderr, "Could not build the Authorization header!\n");

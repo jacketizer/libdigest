@@ -360,43 +360,43 @@ digest_get_attr(digest_t *digest, digest_attr_t attr)
 }
 
 int
-digest_set_attr(digest_t *digest, digest_attr_t attr, const void *value)
+digest_set_attr(digest_t *digest, digest_attr_t attr, const digest_attr_value_t value)
 {
 	digest_s *dig = (digest_s *) digest;
 
 	switch (attr) {
 	case D_ATTR_USERNAME:
-		dig->username = (const char *) value;
+		dig->username = value.string;
 		break;
 	case D_ATTR_PASSWORD:
-		dig->password = (const char *) value;
+		dig->password = value.string;
 		break;
 	case D_ATTR_REALM:
-		dig->realm = (const char *) value;
+		dig->realm = value.string;
 		break;
 	case D_ATTR_NONCE:
-		dig->nonce = (const char *) value;
+		dig->nonce = value.string;
 		break;
 	case D_ATTR_CNONCE:
-		dig->cnonce = (unsigned int) value;
+		dig->cnonce = value.number;
 		break;
 	case D_ATTR_OPAQUE:
-		dig->opaque = (const char *) value;
+		dig->opaque = value.string;
 		break;
 	case D_ATTR_URI:
-		dig->uri = (const char *) value;
+		dig->uri = value.string;
 		break;
 	case D_ATTR_METHOD:
-		dig->method = (unsigned int) value;
+		dig->method = value.number;
 		break;
 	case D_ATTR_ALGORITHM:
-		dig->algorithm = (unsigned int) value;
+		dig->algorithm = value.number;
 		break;
 	case D_ATTR_QOP:
-		dig->qop = (unsigned int) value;
+		dig->qop = value.number;
 		break;
 	case D_ATTR_NONCE_COUNT:
-		dig->nc = (unsigned int) value;
+		dig->nc = value.number;
 		break;
 	default:
 		return -1;
