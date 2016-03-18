@@ -579,8 +579,5 @@ digest_get_hval(digest_t *digest, char *result, size_t max_length)
 		}
 	}
 
-	/* Increase the count */
-	dig->nc++;
-
 	return result_size;
 }

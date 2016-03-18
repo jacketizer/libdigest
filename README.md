@@ -14,8 +14,6 @@ Please note that this library is under development and should not be used yet.
 
 ### To do, client
 
-  * When to increase `nc`.
-  * Better get/set functions for the attributes.
   * Unit tests.
   * Function documentation.
   * Function tests.
