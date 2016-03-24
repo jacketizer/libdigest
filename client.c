@@ -1,6 +1,8 @@
 #include "md5.h"
 #include "client.h"
 
+#define ARRAY_LENGTH(a) (sizeof a / sizeof (a[0]))
+
 /**
  * Generates an MD5 hash from a string.
  *
@@ -28,6 +30,8 @@ _get_md5(const char *string, char *result)
  * Extracts the value part from a attribute-value pair.
  *
  * parameter is the string to parse the value from, ex: "key=value".
+ *           The string needs to be null-terminated. Can be both
+ *           key=value and key="value".
  *
  * Returns a pointer to the start of the value on success, otherwise NULL.
  */
@@ -37,19 +41,16 @@ _dgst_get_val(char *parameter)
 	char *cursor, *q;
 
 	/* Find start of value */
-	cursor = strchr(parameter, '=');
-	if (NULL == cursor) {
+	if (NULL == (cursor = strchr(parameter, '='))) {
 		return (char *) NULL;
 	}
 
-	cursor++;
-	if (*cursor != '"') {
+	if (*(++cursor) != '"') {
 		return cursor;
 	}
-	cursor++;
 
-	q = strchr(cursor, '"');
-	if (NULL == q) {
+	cursor++;
+	if (NULL == (q = strchr(cursor, '"'))) {
 		return (char *) NULL;
 	}
 	*q = '\0';
@@ -64,7 +65,7 @@ _dgst_get_val(char *parameter)
  * header_value is the WWW-Authenticate header field value.
  *
  * Returns a pointer to a new string containing only
- * the authentication parameters.
+ * the authentication parameters. Must be free'd manually.
  */
 static char *
 _crop_sentence(const char *header_value)
@@ -82,32 +83,33 @@ _crop_sentence(const char *header_value)
  * max_values is the length of the **values array. The function will not parse
  * more than max_values entries.
  *
- * Returns the number of values found in sentence.
+ * Returns the number of values found in string.
  */
 static inline int
-_split_sentence(char *sentence, char **values, int max_values)
-	{
+_split_string_by_comma(char *sentence, char **values, int max_values)
+{
 	int i = 0;
-	char *cursor = sentence;
-	int length = strlen(sentence);
 
-	while (i < max_values && '\0' != *cursor && cursor - sentence < length) {
+	while (i < max_values && '\0' != *sentence) {
 		/* Rewind to after spaces */
-		while (' ' == *cursor || ',' == *cursor) {
-			cursor++;
+		while (' ' == *sentence || ',' == *sentence) {
+			sentence++;
 		}
 
-		values[i++] = cursor;
+		/* Check for end of string */
+		if ('\0' == *sentence) {
+			break;
+		}
+
+		values[i++] = sentence;
 
 		/* Find comma */
-		cursor = (char *) memchr(cursor, ',', length - (cursor - sentence));
-		if (NULL == cursor) {
+		if (NULL == (sentence = strchr(sentence, ','))) {
 			/* End of string */
 			break;
 		}
 
-		*cursor = '\0';
-		cursor++;
+		*(sentence++) = '\0';
 	}
 
 	return i;
@@ -129,30 +131,30 @@ _tokenize_sentence(char *sentence, char **values, unsigned int max_values)
 {
 	unsigned int i = 0;
 	char *cursor = sentence;
-	size_t length = strlen(sentence);
 
-	while (i < max_values && *cursor != '\0' && cursor - sentence < length) {
+	while (i < max_values && *cursor != '\0') {
 		/* Rewind to after spaces */
 		while (' ' == *cursor || ',' == *cursor) {
 			cursor++;
 		}
 
+		/* Check for end of string */
+		if ('\0' == *cursor) {
+			break;
+		}
+
 		values[i++] = cursor;
 
 		/* Find equal sign (=) */
-		cursor = (char *) memchr(cursor, '=', length - (cursor - sentence));
-		if (NULL == cursor) {
+		if (NULL == (cursor = strchr(cursor, '='))) {
 			/* End of string */
 			break;
 		}
 
 		/* Check if a quotation mark follows the = */
-		cursor++;
-		if ('\"' == *cursor) {
+		if ('\"' == *(++cursor)) {
 			/* Find next quotation mark */
-			cursor++;
-			cursor = (char *) memchr(cursor, '\"', length - (cursor - sentence));
-			if (NULL == cursor) {
+			if (NULL == (cursor = strchr(++cursor, '\"'))) {
 				/* End of string */
 				break;
 			}
@@ -160,15 +162,13 @@ _tokenize_sentence(char *sentence, char **values, unsigned int max_values)
 			cursor++;
 		} else {
 			/* Find comma */
-			cursor = (char *) memchr(cursor, ',', length - (cursor - sentence));
-			if (NULL == cursor) {
+			if (NULL == (cursor = strchr(cursor, ','))) {
 				/* End of string */
 				break;
 			}
 		}
 
-		*cursor = '\0';
-		cursor++;
+		*(cursor++) = '\0';
 	}
 
 	return i;
@@ -253,36 +253,35 @@ _dgst_parse(digest_s *dig, const char *digest_string)
 	char *values[12];
 
 	parameters = _crop_sentence(digest_string);
-	n = _tokenize_sentence(parameters, values, 12);
+	n = _tokenize_sentence(parameters, values, ARRAY_LENGTH(values));
 
 	while (i < n) {
-		val = values[i++];
-		if (NULL == val) {
+		if (NULL == (val = values[i++])) {
 			continue;
 		}
 
-		if (0 == strncmp("nonce=", val, 6)) {
+		if (0 == strncmp("nonce=", val, strlen("nonce="))) {
 			dig->nonce = _dgst_get_val(val);
-		} else if (0 == strncmp("realm=", val, 6)) {
+		} else if (0 == strncmp("realm=", val, strlen("realm="))) {
 			dig->realm = _dgst_get_val(val);
-		} else if (0 == strncmp("qop=", val, 4)) {
+		} else if (0 == strncmp("qop=", val, strlen("qop="))) {
 			char *qop_options = _dgst_get_val(val);
 			char *qop_values[2];
-			int n_qops = _split_sentence(qop_options, qop_values, 2);
+			int n_qops = _split_string_by_comma(qop_options, qop_values, ARRAY_LENGTH(qop_values));
 			while (n_qops-- > 0) {
-				if (0 == strncmp(qop_values[n_qops], "auth", 4)) {
+				if (0 == strncmp(qop_values[n_qops], "auth", strlen("auth"))) {
 					dig->qop |= DIGEST_QOP_AUTH;
 					continue;
 				}
-				if (0 == strncmp(qop_values[n_qops], "auth-int", 8)) {
+				if (0 == strncmp(qop_values[n_qops], "auth-int", strlen("auth-int"))) {
 					dig->qop |= DIGEST_QOP_AUTH_INT;
 				}
 			}
-		} else if (0 == strncmp("opaque=", val, 7)) {
+		} else if (0 == strncmp("opaque=", val, strlen("opaque="))) {
 			dig->opaque = _dgst_get_val(val);
-		} else if (0 == strncmp("algorithm=", val, 10)) {
+		} else if (0 == strncmp("algorithm=", val, strlen("algorithm="))) {
 			char *algorithm = _dgst_get_val(val);
-			if (0 == strncmp(algorithm, "MD5", 3)) {
+			if (0 == strncmp(algorithm, "MD5", strlen("MD5"))) {
 				dig->algorithm = DIGEST_ALGORITHM_MD5;
 			}
 		}
