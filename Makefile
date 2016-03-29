@@ -1,4 +1,4 @@
-SRC_FILES = md5.c client.c
+SRC_FILES = md5.c hash.c parse.c digest.c client.c
 OBJ_FILES = $(patsubst %.c, %.o, $(SRC_FILES))
 
 CC = gcc
