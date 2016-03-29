@@ -37,6 +37,23 @@ _dgst_get_val(char *parameter)
 }
 
 /**
+ * Checks if a string pointer is NULL or if the length is more than 255 chars.
+ *
+ * string is the string to check.
+ *
+ * Returns 0 if not NULL and length is below 256 characters, otherwise -1.
+ */
+int
+_check_string(const char *string)
+{
+	if (NULL == string || 255 < strlen(string)) {
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
  * Removes the authentication scheme identification token from the
  * WWW-Authenticate header field value.
  *
@@ -204,4 +221,42 @@ parse_digest(digest_s *dig, const char *digest_string)
 	}
 
 	return i;
+}
+
+/**
+ * Validates the string values in a digest struct.
+ *
+ * The function goes through the string values and check if they are valid.
+ * They are considered valid if they aren't NULL and the character length is
+ * below 256.
+ *
+ * dig is a pointer to the struct where to check the string values.
+ *
+ * Returns 0 if valid, otherwise -1.
+ */
+int
+parse_validate_attributes(digest_s *dig)
+{
+	if (-1 == _check_string(dig->username)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->password)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->uri)) {
+		return -1;
+	}
+	if (-1 == _check_string(dig->realm)) {
+		return -1;
+	}
+	if (NULL != dig->opaque && 255 < strlen(dig->opaque)) {
+		return -1;
+	}
+
+	/* nonce */
+	if (DIGEST_QOP_NOT_SET != dig->qop && -1 == _check_string(dig->nonce)) {
+		return -1;
+	}
+
+	return 0;
 }

@@ -17,7 +17,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (0 != digest_parse(&d, digest_str)) {
+	if (0 != digest_client_parse(&d, digest_str)) {
 		fprintf(stderr, "Could not parse digest string!\n");
 		exit(1);
 	}
@@ -27,7 +27,7 @@ main(int argc, char **argv)
 	digest_set_attr(&d, D_ATTR_URI, (digest_attr_value_t) "/api/resource");
 	digest_set_attr(&d, D_ATTR_METHOD, (digest_attr_value_t) DIGEST_METHOD_POST);
 
-	if (-1 == digest_get_hval(&d, result, sizeof (result))) {
+	if (-1 == digest_client_generate_header(&d, result, sizeof (result))) {
 		fprintf(stderr, "Could not build the Authorization header!\n");
 		exit(1);
 	}

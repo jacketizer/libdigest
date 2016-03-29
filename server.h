@@ -1,5 +1,5 @@
-#ifndef INC_DIGEST_CLIENT_H
-#define INC_DIGEST_CLIENT_H
+#ifndef INC_DIGEST_SERVER_H
+#define INC_DIGEST_SERVER_H
 #include "digest.h"
 
 /**
@@ -10,16 +10,16 @@
  *
  * @returns int 0 on success, otherwise -1.
  */
-extern int digest_client_parse(digest_t *digest, const char *digest_string);
+extern int digest_server_parse(digest_t *digest, const char *digest_string);
 
 /**
- * Generate the Authorization header value.
+ * Generate the WWW-Authenticate header value.
  *
  * @param digest_t *digest The digest context to generate the header value from.
  * @param char *result The buffer to store the generated header value in.
  *
  * Returns the number of bytes in the result string. -1 on failure.
  */
-extern size_t digest_client_generate_header(digest_t *digest, char *result, size_t max_length);
+extern size_t digest_server_generate_header(digest_t *digest, char *result, size_t max_length);
 
-#endif  /* INC_DIGEST_CLIENT_H */
+#endif  /* INC_DIGEST_SERVER_H */
