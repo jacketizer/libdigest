@@ -16,7 +16,7 @@ test_digest_create_ok()
 	digest_s *dig;
 	char digest_str[] = "Digest realm=\"test\", qop=\"auth-int,auth\", nonce=\"9e9cb182c25b68148676a98cda86d501\" opaque=\"9bc51272c609b6b6bb3547fac2102e78\"";
 
-	rc = digest_parse(&d, digest_str);
+	rc = digest_client_parse(&d, digest_str);
 	mu_assert("should be able to create a new digest object", -1 != rc);
 
 	dig = (digest_s *) &d;
