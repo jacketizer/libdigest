@@ -1,3 +1,4 @@
+VPATH = src
 SRC_FILES = md5.c hash.c parse.c digest.c client.c server.c
 OBJ_FILES = $(patsubst %.c, %.o, $(SRC_FILES))
 
@@ -22,8 +23,8 @@ install: all
 	install --directory ${PREFIX}/lib
 	install --directory ${PREFIX}/include/digest
 	install libdigest.so ${PREFIX}/lib/
-	install digest.h ${PREFIX}/include/
-	install client.h ${PREFIX}/include/digest
+	install ${VPATH}/digest.h ${PREFIX}/include/
+	install ${VPATH}/client.h ${PREFIX}/include/digest
 	ldconfig -n ${PREFIX}/lib
 
 .PHONY: examples
