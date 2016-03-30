@@ -15,6 +15,12 @@ extern int digest_server_parse(digest_t *digest, const char *digest_string);
 /**
  * Generate the WWW-Authenticate header value.
  *
+ * Attributes that must be set manually before calling this function:
+ *
+ *  - Realm
+ *  - Algorithm
+ *  - Nonce
+ *
  * @param digest_t *digest The digest context to generate the header value from.
  * @param char *result The buffer to store the generated header value in.
  *

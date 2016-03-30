@@ -17,6 +17,11 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
+	if (-1 == digest_init(&d)) {
+		fprintf(stderr, "Could not init digest context!\n");
+		exit(1);
+	}
+
 	if (0 != digest_client_parse(&d, digest_str)) {
 		fprintf(stderr, "Could not parse digest string!\n");
 		exit(1);

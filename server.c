@@ -11,20 +11,7 @@ digest_server_parse(digest_t *digest, const char *digest_string)
 {
 	digest_s *dig = (digest_s *) digest;
 
-	/* Clear */
-	memset(dig, 0, sizeof (digest_s));
-
-	/* Set default values */
-	dig->nc = 1;
-	dig->cnonce = time(NULL);
-	dig->algorithm = DIGEST_ALGORITHM_MD5;
-	dig->qop = '\0';
-
-	if (-1 == parse_digest(dig, digest_string)) {
-		return -1;
-	}
-
-	return 0;
+	return parse_digest(dig, digest_string);
 }
 
 /**
@@ -33,6 +20,8 @@ digest_server_parse(digest_t *digest, const char *digest_string)
  * Attributes that must be set manually before calling this function:
  *
  *  - Realm
+ *  - Algorithm
+ *  - Nonce
  *
  * If not set, NULL will be returned.
  *

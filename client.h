@@ -15,6 +15,13 @@ extern int digest_client_parse(digest_t *digest, const char *digest_string);
 /**
  * Generate the Authorization header value.
  *
+ * Attributes that must be set manually before calling this function:
+ *
+ *  - Username
+ *  - Password
+ *  - URI
+ *  - Method
+ *
  * @param digest_t *digest The digest context to generate the header value from.
  * @param char *result The buffer to store the generated header value in.
  *

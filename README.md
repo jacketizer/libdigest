@@ -12,15 +12,12 @@ Only supports *qop="auth"* and *algorithm="MD5"* for now. If they are not suppli
 
 Please note that this library is under development and should not be used yet.
 
-### To do, client
+### To do
 
-  * Unit tests.
+  * Finish implementing server functionality.
   * Function documentation.
   * Function tests.
-
-### To do, server
-
-  * Start implementing it.
+  * Unit tests.
 
 Build it
 --------
@@ -46,7 +43,8 @@ Create a new digest object with the value of the `WWW-Authenticate` header:
 
 ```C
 digest_t d;
-digest_parse(&d, "Digest realm=\"api\", qop=\"auth,auth-int\", nonce=dcd98b7102dd2f0e8b11d0f600bfb0c093");
+digest_init(&d);
+digest_client_parse(&d, "Digest realm=\"api\", qop=\"auth,auth-int\", nonce=dcd98b7102dd2f0e8b11d0f600bfb0c093");
 ```
 
 Then supply the username, password, URI and HTTP method like below:
@@ -62,7 +60,7 @@ To generate the string to use in the `Authorization` header, call `digest_get_hv
 
 ```C
 char result[1024];
-digest_get_hval(&d, result, sizeof (result));
+digest_client_generate_header(&d, result, sizeof (result));
 ```
 
 All the code (compile with `-ldigest`):

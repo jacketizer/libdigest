@@ -61,6 +61,21 @@ typedef union {
 #define DIGEST_METHOD_TRACE 	7
 
 /**
+ * Initiate the digest context.
+ *
+ */
+int digest_init(digest_t *digest);
+
+/**
+ * Check if WWW-Authenticate string is digest authentication scheme.
+ *
+ * @param const char *header_value The value of the WWW-Authentication header.
+ *
+ * @returns int 0 if digest scheme, otherwise -1.
+ */
+extern int digest_is_digest(const char *header_value);
+
+/**
  * Get an attribute from a digest context.
  *
  * @param digest_t *digest The digest context to get attribute from.
@@ -82,14 +97,5 @@ extern void * digest_get_attr(digest_t *digest, digest_attr_t attr);
  * @returns int 0 on success, otherwise -1.
  */
 extern int digest_set_attr(digest_t *digest, digest_attr_t attr, const digest_attr_value_t value);
-
-/**
- * Check if WWW-Authenticate string is digest authentication scheme.
- *
- * @param const char *header_value The value of the WWW-Authentication header.
- *
- * @returns int 0 if digest scheme, otherwise -1.
- */
-extern int digest_is_digest(const char *header_value);
 
 #endif

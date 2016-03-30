@@ -3,6 +3,20 @@
 #include "digest.h"
 
 int
+digest_init(digest_t *digest)
+{
+	digest_s *dig = (digest_s *) digest;
+
+	/* Clear */
+	memset(dig, 0, sizeof (digest_s));
+
+	/* Set default values */
+	dig->algorithm = DIGEST_ALGORITHM_MD5;
+
+	return 0;
+}
+
+int
 digest_is_digest(const char *header_value)
 {
 	if (NULL == header_value) {
