@@ -13,6 +13,15 @@
 extern int digest_server_parse(digest_t *digest, const char *digest_string);
 
 /**
+ * Generate a nonce for a digest context.
+ *
+ * @param digest_t *digest The digest context.
+ *
+ * @returns int 0 on success, otherwise -1.
+ */
+extern int digest_server_generate_nonce(digest_t *digest);
+
+/**
  * Generate the WWW-Authenticate header value.
  *
  * Attributes that must be set manually before calling this function:

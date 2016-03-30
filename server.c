@@ -14,6 +14,18 @@ digest_server_parse(digest_t *digest, const char *digest_string)
 	return parse_digest(dig, digest_string);
 }
 
+int
+digest_server_generate_nonce(digest_t *digest)
+{
+	//digest_s *dig = (digest_s *) digest;
+
+  /* Use srand and base64 or md5.
+     Do the same with cnonce and opaque.
+     How should the strings be allocated and free'd? */
+
+  return 0;
+}
+
 /**
  * Generates the WWW-Authenticate header string.
  *
