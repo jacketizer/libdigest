@@ -19,11 +19,11 @@ digest_server_generate_nonce(digest_t *digest)
 {
 	//digest_s *dig = (digest_s *) digest;
 
-  /* Use srand and base64 or md5.
-     Do the same with cnonce and opaque.
-     How should the strings be allocated and free'd? */
+	/* Use srand and base64 or md5.
+	   Do the same with cnonce and opaque.
+	   How should the strings be allocated and free'd? */
 
-  return 0;
+	return 0;
 }
 
 /**
